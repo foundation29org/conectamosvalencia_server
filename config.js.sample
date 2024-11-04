@@ -1,0 +1,20 @@
+// All the keys with values from procces.env must be configured in Azure App service: Configuration/Aplication settings
+module.exports = {
+    client_server: process.env.CLIENT_SERVER, // URL for the client application
+    port: process.env.PORT, // Server port
+    dbaccounts: process.env.MONGODBACCOUNTS, // MongoDB connection string
+    SECRET_TOKEN: undefined, // JWT secret token
+    TRANSPORTER_OPTIONS: {
+        host: 'smtp.office365.com',
+        port: '587',
+        secureConnection: false,
+        tls: { ciphers: 'SSLv3' },
+        auth: {
+            user: undefined, // Email address for sending emails
+            pass: undefined // Email password or app-specific password
+        }
+    },
+    SECRET_KEY_CRYPTO: undefined, // Secret key for crypto operations
+    secretCaptcha: process.env.CAPTCHA_SECRET_KEY, // Google reCAPTCHA secret key
+    allowedOrigins: process.env.ALLOWEDORIGINS // Array of allowed origins for CORS
+}
