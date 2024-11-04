@@ -236,7 +236,7 @@ const deactivateUser = async (req, res) => {
 };
 
 /**
- * @api {post} https://conectamosvalencia.azurewebsites.net/api/api/signUp New account
+ * @api {post} https://conectamosvalencia.com/api/api/signUp New account
  * @apiName signUp
  * @apiVersion 1.0.0
  * @apiGroup Account
@@ -244,7 +244,7 @@ const deactivateUser = async (req, res) => {
  * @apiExample {js} Example usage:
  *  var passwordsha512 = sha512("fjie76?vDh");
  *  var formValue = { email: "example@ex.com", userName: "Peter", password: passwordsha512, lang: "en", group: "None"};
- *   this.http.post('https://conectamosvalencia.azurewebsites.net/api/signup',formValue)
+ *   this.http.post('https://conectamosvalencia.com/api/signup',formValue)
  *    .subscribe( (res : any) => {
  *      if(res.message == "Account created"){
  *        console.log("Check the email to activate the account");
