@@ -25,9 +25,10 @@ function corsWithOptions(req, res, next) {
       
       // Verificar que el host es el esperado
       const isValidHost = req.headers.host && (
-        req.headers.host.includes('ayudamosvalencia.com') ||
-        req.headers.host.includes('localhost:') ||  // Para desarrollo local
-        req.headers.host.includes('127.0.0.1:')    // Alternativa localhost
+        req.headers.host === 'conectamosvalencia.com' ||          // Producción
+        req.headers.host.includes('conectamosvalencia.com') ||    // Subdominio en producción
+        req.headers.host.includes('localhost:') ||                // Desarrollo local
+        req.headers.host.includes('127.0.0.1:')                  // Alternativa localhost
       );
 
       if (!isValidHost) {

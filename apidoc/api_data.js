@@ -1,7 +1,7 @@
 define({ "api": [
   {
     "type": "post",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/api/signin",
+    "url": "https://conectamosvalencia.com/api/api/signin",
     "title": "Get the token (and the userId)",
     "name": "signIn",
     "version": "1.0.0",
@@ -10,7 +10,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar formValue = { email: \"aa@aa.com\", password: passwordsha512 };\n this.http.post('https://conectamosvalencia.azurewebsites.net/api/signin',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"You have successfully logged in\"){\n      console.log(res.lang);\n      console.log(res.token);\n    }else{\n      this.isloggedIn = false;\n    }\n }, (err) => {\n   this.isloggedIn = false;\n }",
+        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar formValue = { email: \"aa@aa.com\", password: passwordsha512 };\n this.http.post('https://conectamosvalencia.com/api/signin',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"You have successfully logged in\"){\n      console.log(res.lang);\n      console.log(res.token);\n    }else{\n      this.isloggedIn = false;\n    }\n }, (err) => {\n   this.isloggedIn = false;\n }",
         "type": "js"
       }
     ],
@@ -89,7 +89,7 @@ define({ "api": [
   },
   {
     "type": "post",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/api/newPass",
+    "url": "https://conectamosvalencia.com/api/api/newPass",
     "title": "New password",
     "name": "newPass",
     "version": "1.0.0",
@@ -98,7 +98,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar newpasswordsha512 = sha512(\"jisd?87Tg\");\nvar formValue = { email: example@ex.com, actualpassword: passwordsha512, newpassword: newpasswordsha512 };\n this.http.post('https://conectamosvalencia.azurewebsites.net/api/newPass',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"password changed\"){\n      console.log(\"Password changed successfully\");\n    }else if(res.message == 'Login failed'){\n      console.log('The current password is incorrect');\n    }else if(res.message == 'Account is temporarily locked'){\n      console.log('Account is temporarily locked');\n    }else if(res.message == 'Account is unactivated'){\n      ...\n    }\n }, (err) => {\n   ...\n }",
+        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar newpasswordsha512 = sha512(\"jisd?87Tg\");\nvar formValue = { email: example@ex.com, actualpassword: passwordsha512, newpassword: newpasswordsha512 };\n this.http.post('https://conectamosvalencia.com/api/newPass',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"password changed\"){\n      console.log(\"Password changed successfully\");\n    }else if(res.message == 'Login failed'){\n      console.log('The current password is incorrect');\n    }else if(res.message == 'Account is temporarily locked'){\n      console.log('Account is temporarily locked');\n    }else if(res.message == 'Account is unactivated'){\n      ...\n    }\n }, (err) => {\n   ...\n }",
         "type": "js"
       }
     ],
@@ -190,7 +190,7 @@ define({ "api": [
   },
   {
     "type": "post",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/api/recoverpass",
+    "url": "https://conectamosvalencia.com/api/api/recoverpass",
     "title": "Request password change",
     "name": "recoverPass",
     "version": "1.0.0",
@@ -199,7 +199,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var formValue = { email: \"example@ex.com\"};\nthis.http.post('https://conectamosvalencia.azurewebsites.net/api/recoverpass',formValue)\n .subscribe( (res : any) => {\n   if(res.message == \"Email sent\"){\n     console.log(\"Account recovery email sent. Check the email to change the password\");\n   }\n}, (err) => {\n  if(err.error.message == 'Fail sending email'){\n     //contact with health29\n   }else if(err.error.message == 'user not exists'){\n    ...\n   }else if(err.error.message == 'account not activated'){\n    ...\n   }\n}",
+        "content": "var formValue = { email: \"example@ex.com\"};\nthis.http.post('https://conectamosvalencia.com/api/recoverpass',formValue)\n .subscribe( (res : any) => {\n   if(res.message == \"Email sent\"){\n     console.log(\"Account recovery email sent. Check the email to change the password\");\n   }\n}, (err) => {\n  if(err.error.message == 'Fail sending email'){\n     //contact with health29\n   }else if(err.error.message == 'user not exists'){\n    ...\n   }else if(err.error.message == 'account not activated'){\n    ...\n   }\n}",
         "type": "js"
       }
     ],
@@ -257,7 +257,7 @@ define({ "api": [
   },
   {
     "type": "post",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/api/signUp",
+    "url": "https://conectamosvalencia.com/api/api/signUp",
     "title": "New account",
     "name": "signUp",
     "version": "1.0.0",
@@ -266,7 +266,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar formValue = { email: \"example@ex.com\", userName: \"Peter\", password: passwordsha512, lang: \"en\", group: \"None\"};\n this.http.post('https://conectamosvalencia.azurewebsites.net/api/signup',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"Account created\"){\n      console.log(\"Check the email to activate the account\");\n    }else if(res.message == 'Fail sending email'){\n      //contact with health29\n    }else if(res.message == 'user exists'){\n     ...\n    }\n }, (err) => {\n   ...\n }",
+        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar formValue = { email: \"example@ex.com\", userName: \"Peter\", password: passwordsha512, lang: \"en\", group: \"None\"};\n this.http.post('https://conectamosvalencia.com/api/signup',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"Account created\"){\n      console.log(\"Check the email to activate the account\");\n    }else if(res.message == 'Fail sending email'){\n      //contact with health29\n    }else if(res.message == 'user exists'){\n     ...\n    }\n }, (err) => {\n   ...\n }",
         "type": "js"
       }
     ],
@@ -343,7 +343,7 @@ define({ "api": [
   },
   {
     "type": "post",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/api/updatepass",
+    "url": "https://conectamosvalencia.com/api/api/updatepass",
     "title": "Update password",
     "name": "updatePass",
     "version": "1.0.0",
@@ -352,7 +352,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar param = this.router.parseUrl(this.router.url).queryParams;\nvar formValue = { email: param.email, password: passwordsha512, randomCodeRecoverPass: param.key };\n this.http.post('https://conectamosvalencia.azurewebsites.net/api/updatepass',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"password changed\"){\n      console.log(\"Password changed successfully\");\n    }\n }, (err) => {\n   if(err.error.message == 'invalid link'){\n      ...\n    }else if(err.error.message == 'link expired'){\n      console.log('The link has expired after more than 15 minutes since you requested it. Re-request a password change.');\n    }else if(err.error.message == 'Error saving the pass'){\n      ...\n    }\n }",
+        "content": "var passwordsha512 = sha512(\"fjie76?vDh\");\nvar param = this.router.parseUrl(this.router.url).queryParams;\nvar formValue = { email: param.email, password: passwordsha512, randomCodeRecoverPass: param.key };\n this.http.post('https://conectamosvalencia.com/api/updatepass',formValue)\n  .subscribe( (res : any) => {\n    if(res.message == \"password changed\"){\n      console.log(\"Password changed successfully\");\n    }\n }, (err) => {\n   if(err.error.message == 'invalid link'){\n      ...\n    }else if(err.error.message == 'link expired'){\n      console.log('The link has expired after more than 15 minutes since you requested it. Re-request a password change.');\n    }else if(err.error.message == 'Error saving the pass'){\n      ...\n    }\n }",
         "type": "js"
       }
     ],
@@ -424,7 +424,7 @@ define({ "api": [
   },
   {
     "type": "put",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/requestclin/status/:requestId",
+    "url": "https://conectamosvalencia.com/api/requestclin/status/:requestId",
     "title": "Update Status",
     "name": "updateclinicianStatus",
     "description": "<p>This method allows to change the data of a clinician case.</p>",
@@ -433,7 +433,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var data = {status: 'ontheway'};\nthis.http.put('https://conectamosvalencia.azurewebsites.net/api/requestclin/status/'+requestId, data)\n .subscribe( (res : any) => {\n   console.log('Message: '+ res.message);\n  }, (err) => {\n   ...\n  }",
+        "content": "var data = {status: 'ontheway'};\nthis.http.put('https://conectamosvalencia.com/api/requestclin/status/'+requestId, data)\n .subscribe( (res : any) => {\n   console.log('Message: '+ res.message);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -512,7 +512,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/group/",
+    "url": "https://conectamosvalencia.com/api/group/",
     "title": "Get specific group information",
     "name": "getGroup",
     "description": "<p>This method return the information of one group of health29.</p>",
@@ -521,7 +521,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var groupName = \"GroupName\"\nthis.http.get('https://conectamosvalencia.azurewebsites.net/api/group/'+groupName)\n .subscribe( (res : any) => {\n   console.log('result Ok');\n  }, (err) => {\n   ...\n  }",
+        "content": "var groupName = \"GroupName\"\nthis.http.get('https://conectamosvalencia.com/api/group/'+groupName)\n .subscribe( (res : any) => {\n   console.log('result Ok');\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -625,7 +625,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/groupadmin/",
+    "url": "https://conectamosvalencia.com/api/groupadmin/",
     "title": "Get administrator email",
     "name": "getGroupAdmin",
     "description": "<p>This method return the email of the administrator of the group.</p>",
@@ -634,7 +634,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var groupName = <groupName>\nthis.http.get('https://conectamosvalencia.azurewebsites.net/api/groupadmin/'+groupName)\n .subscribe( (res : any) => {\n   console.log('Get the email of the administrator of the group ok');\n  }, (err) => {\n   ...\n  }",
+        "content": "var groupName = <groupName>\nthis.http.get('https://conectamosvalencia.com/api/groupadmin/'+groupName)\n .subscribe( (res : any) => {\n   console.log('Get the email of the administrator of the group ok');\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -685,7 +685,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/groups/",
+    "url": "https://conectamosvalencia.com/api/groups/",
     "title": "Get groups",
     "name": "getGroups",
     "description": "<p>This method return the groups of health29. you get a list of groups, and for each one you have: name, and the symptoms associated with the group.</p>",
@@ -694,7 +694,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/groups)\n .subscribe( (res : any) => {\n   console.log('groups: '+ res.groups);\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.get('https://conectamosvalencia.com/api/groups)\n .subscribe( (res : any) => {\n   console.log('groups: '+ res.groups);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -732,7 +732,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/groupsnames/",
+    "url": "https://conectamosvalencia.com/api/groupsnames/",
     "title": "Get groups names",
     "name": "getGroupsNames",
     "description": "<p>This method return the groups of health29. you get a list of groups, and for each one you have the name.</p>",
@@ -741,7 +741,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/groupsnames)\n .subscribe( (res : any) => {\n   console.log('groups: '+ res.groups);\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.get('https://conectamosvalencia.com/api/groupsnames)\n .subscribe( (res : any) => {\n   console.log('groups: '+ res.groups);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -779,7 +779,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/langs/",
+    "url": "https://conectamosvalencia.com/api/langs/",
     "title": "Get languages",
     "name": "getLangs",
     "description": "<p>This method return the languages available in ConectamosValencia. you get a list of languages, and for each one you have the name and the code. We currently have 5 languages, but we will include more. The current languages are:</p> <ul> <li>English: en</li> <li>Spanish: es</li> <li>German: de</li> <li>Dutch: nl</li> <li>Portuguese: pt</li> </ul>",
@@ -788,7 +788,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/langs)\n .subscribe( (res : any) => {\n   console.log('languages: '+ res.listLangs);\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.get('https://conectamosvalencia.com/api/langs)\n .subscribe( (res : any) => {\n   console.log('languages: '+ res.listLangs);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -806,7 +806,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/patients/:patientId",
+    "url": "https://conectamosvalencia.com/api/patients/:patientId",
     "title": "Get patient",
     "name": "getPatient",
     "description": "<p>This method read data of a Patient</p>",
@@ -815,7 +815,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/patients/'+patientId)\n .subscribe( (res : any) => {\n   console.log('patient info: '+ res.patient);\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.get('https://conectamosvalencia.com/api/patients/'+patientId)\n .subscribe( (res : any) => {\n   console.log('patient info: '+ res.patient);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -986,7 +986,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/patients-all/:userId",
+    "url": "https://conectamosvalencia.com/api/patients-all/:userId",
     "title": "Get patient list of a user",
     "name": "getPatientsUser",
     "description": "<p>This method read the patient list of a user. For each patient you have, you will get: patientId, name, and last name.</p>",
@@ -995,7 +995,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/patients-all/'+userId)\n .subscribe( (res : any) => {\n   console.log('patient list: '+ res.listpatients);\n   if(res.listpatients.length>0){\n     console.log(\"patientId\" + res.listpatients[0].sub +\", Patient Name: \"+ res.listpatients[0].patientName+\", Patient surname: \"+ res.listpatients[0].surname);\n   }\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.get('https://conectamosvalencia.com/api/patients-all/'+userId)\n .subscribe( (res : any) => {\n   console.log('patient list: '+ res.listpatients);\n   if(res.listpatients.length>0){\n     console.log(\"patientId\" + res.listpatients[0].sub +\", Patient Name: \"+ res.listpatients[0].patientName+\", Patient surname: \"+ res.listpatients[0].surname);\n   }\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -1057,7 +1057,7 @@ define({ "api": [
   },
   {
     "type": "put",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/patients/:patientId",
+    "url": "https://conectamosvalencia.com/api/patients/:patientId",
     "title": "Update Patient",
     "name": "updatePatient",
     "description": "<p>This method allows to change the data of a patient.</p>",
@@ -1066,7 +1066,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var patient = {patientName: '', surname: '', street: '', postalCode: '', citybirth: '', provincebirth: '', countrybirth: null, city: '', province: '', country: null, phone1: '', phone2: '', birthDate: null, gender: null, siblings: [], parents: []};\nthis.http.put('https://conectamosvalencia.azurewebsites.net/api/patients/'+patientId, patient)\n .subscribe( (res : any) => {\n   console.log('patient info: '+ res.patientInfo);\n  }, (err) => {\n   ...\n  }",
+        "content": "var patient = {patientName: '', surname: '', street: '', postalCode: '', citybirth: '', provincebirth: '', countrybirth: null, city: '', province: '', country: null, phone1: '', phone2: '', birthDate: null, gender: null, siblings: [], parents: []};\nthis.http.put('https://conectamosvalencia.com/api/patients/'+patientId, patient)\n .subscribe( (res : any) => {\n   console.log('patient info: '+ res.patientInfo);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -1253,7 +1253,7 @@ define({ "api": [
   },
   {
     "type": "put",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/patient/status/:patientId",
+    "url": "https://conectamosvalencia.com/api/patient/status/:patientId",
     "title": "Update Status",
     "name": "updatePatientStatus",
     "description": "<p>This method allows to change the data of a patient.</p>",
@@ -1262,7 +1262,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "var data = {status: 'ontheway'};\nthis.http.put('https://conectamosvalencia.azurewebsites.net/api/patient/status/'+patientId, data)\n .subscribe( (res : any) => {\n   console.log('Message: '+ res.message);\n  }, (err) => {\n   ...\n  }",
+        "content": "var data = {status: 'ontheway'};\nthis.http.put('https://conectamosvalencia.com/api/patient/status/'+patientId, data)\n .subscribe( (res : any) => {\n   console.log('Message: '+ res.message);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],
@@ -1341,7 +1341,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/users/:id",
+    "url": "https://conectamosvalencia.com/api/users/:id",
     "title": "Get user",
     "name": "getUser",
     "version": "1.0.0",
@@ -1350,7 +1350,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.get('https://conectamosvalencia.azurewebsites.net/api/users/'+userId)\n .subscribe( (res : any) => {\n   console.log(res.userName);\n}, (err) => {\n  ...\n}",
+        "content": "this.http.get('https://conectamosvalencia.com/api/users/'+userId)\n .subscribe( (res : any) => {\n   console.log(res.userName);\n}, (err) => {\n  ...\n}",
         "type": "js"
       }
     ],
@@ -1459,7 +1459,7 @@ define({ "api": [
   },
   {
     "type": "put",
-    "url": "https://conectamosvalencia.azurewebsites.net/api/users/:id",
+    "url": "https://conectamosvalencia.com/api/users/:id",
     "title": "Update user",
     "name": "updateUser",
     "version": "1.0.0",
@@ -1468,7 +1468,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "this.http.put('https://conectamosvalencia.azurewebsites.net/api/users/'+userId, this.user)\n .subscribe( (res : any) => {\n   console.log('User update: '+ res.user);\n  }, (err) => {\n   ...\n  }",
+        "content": "this.http.put('https://conectamosvalencia.com/api/users/'+userId, this.user)\n .subscribe( (res : any) => {\n   console.log('User update: '+ res.user);\n  }, (err) => {\n   ...\n  }",
         "type": "js"
       }
     ],

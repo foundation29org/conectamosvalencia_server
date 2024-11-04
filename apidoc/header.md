@@ -1,6 +1,6 @@
 # Introduction
 
-> <a href="https://conectamosvalencia.azurewebsites.net/" target="_blank">Health29</a> provides a Web API for accessing data. Anyone can develop an application to access and modify a Health29 user's data. <a href="https://oauth.net/2/" target="_blank">OAuth 2.0</a> (Implicit Grant) is used as an authorization protocol to give an API client limited access to user data.
+> <a href="https://conectamosvalencia.com/" target="_blank">Health29</a> provides a Web API for accessing data. Anyone can develop an application to access and modify a Health29 user's data. <a href="https://oauth.net/2/" target="_blank">OAuth 2.0</a> (Implicit Grant) is used as an authorization protocol to give an API client limited access to user data.
 
 ### Quick Start
 * Most requests to the API require an access token as authentication.
