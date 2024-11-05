@@ -79,6 +79,7 @@ api.get('/admin/allusers', corsWithOptions, auth(roles.AdminSuperAdmin), admninU
 api.post('/needs/:userId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.createNeed)
 api.put('/needs/:userId/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateNeed)
 api.delete('/needs/:userId/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.deleteNeed)
+api.delete('/superadmin/needs/:needId', corsWithOptions, auth(roles.SuperAdmin), needsCtrl.superadminDeleteNeed)
 
 //needs/phone
 api.get('/needs/phone/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getPhone)

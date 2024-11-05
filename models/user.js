@@ -35,7 +35,8 @@ const UserSchema = Schema({
 	loginAttempts: { type: Number, required: true, default: 0 },
 	lockUntil: { type: Number },
 	blockedaccount: { type: Boolean, default: false },
-	platform: { type: String, default: '' }
+	platform: { type: String, default: '' },
+	dateDeactivated: { type: Date, default: null }
 })
 
 

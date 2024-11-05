@@ -34,6 +34,10 @@ const needSchema = new Schema({
     type: String,
     default: 'new'
   },
+  activated: {
+    type: Boolean,
+    default: true
+  },
   timestamp: {
     type: Date,
     default: Date.now
