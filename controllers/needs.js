@@ -86,8 +86,10 @@ const getAllNeedsComplete = async (req, res) => {
     try {
         // Obtener todas las necesidades
         // Puedes añadir .sort({ timestamp: -1 }) si quieres ordenar por fecha descendente
-        const needs = await Need.find({ status: { $ne: 'completed' } });
-
+        const needs = await Need.find({ 
+            status: { $ne: 'completed' },
+            activated: true  // Añadir este filtro
+        });
         res.status(200).json({
             success: true,
             data: needs,
@@ -110,8 +112,10 @@ const getAllNeedsCompleteForUser = async (req, res) => {
         const { userId } = req.params;
         //decrypt userId
         const decryptedUserId = crypt.decrypt(userId);
-        const needs = await Need.find({ userId: decryptedUserId });
-
+        const needs = await Need.find({ 
+            userId: decryptedUserId,
+            activated: true  // Añadir este filtro
+        });
         res.status(200).json({
             success: true,
             data: needs,
@@ -130,7 +134,9 @@ const getAllNeedsCompleteForUser = async (req, res) => {
 
 const getAllNeedsForHeatmap = async (req, res) => {
     try {
-        const needs = await Need.find({});
+        const needs = await Need.find({ 
+            activated: true  // Añadir este filtro
+        });
         
         // Transformamos los datos antes de enviarlos
         const sanitizedNeeds = needs.map(need => ({
@@ -205,13 +211,52 @@ const deleteNeed = async (req, res) => {
     }
 };
 
+const superadminDeleteNeed = async (req, res) => {
+    try {
+        const needId = req.params.needId;
+        
+        if (!needId) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID de necesidad no proporcionado'
+            });
+        }
+
+        const deletedNeed = await Need.findByIdAndRemove(needId);
+
+        if (!deletedNeed) {
+            return res.status(404).json({
+                success: false,
+                message: 'Necesidad no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Necesidad eliminada correctamente'
+        });
+
+    } catch (error) {
+        console.error('Error al eliminar necesidad:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar la necesidad',
+            error: error.message
+        });
+    }
+};
+
 //crea esta funcion api.get('/needs/phone/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getAllNeedsForPhone)
 const getPhone = async (req, res) => {
     try {
         const needId = req.params.needId;
         //tienes que coger el userId de la necesidad y devolver el telefono de la coleccion users
-        const need = await Need.findById(needId);
+        const need = await Need.findOne({ 
+            _id: needId,
+            activated: true  // Añadir este filtro
+        });
         const user = await User.findById(need.userId);
+        console.log(user);
         res.status(200).json({
             success: true,
             data: user.phone
@@ -271,6 +316,7 @@ module.exports = {
     getAllNeedsForHeatmap,
     getAllNeedsCompleteForUser,
     deleteNeed,
+    superadminDeleteNeed,
     getPhone,
     updateStatus
 }; 

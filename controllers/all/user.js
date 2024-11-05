@@ -8,6 +8,7 @@ const serviceAuth = require('../../services/auth')
 const serviceEmail = require('../../services/email')
 const crypt = require('../../services/crypt')
 const config = require('../../config')
+const Need = require('../../models/need')
 
 function login(req, res) {
 	// attempt to authenticate user
@@ -113,7 +114,6 @@ function checkLogin(req, res) {
 
 const activateUser = async (req, res) => {
     try {
-        // Desencriptar el userId del parámetro
         const userId = crypt.decrypt(req.params.userId);
         
         if (!userId) {
@@ -123,32 +123,39 @@ const activateUser = async (req, res) => {
             });
         }
 
-        // Buscar el usuario y actualizar su estado
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { 
-                confirmed: true,
-                dateConfirmed: new Date()
-            },
-            {
-                select: '-createdBy -loginAttempts -confirmationCode',
-                new: true
-            }
-        );
+        // Ejecutar operaciones en paralelo
+        const [updatedUser] = await Promise.all([
+            // Activar usuario
+            User.findByIdAndUpdate(
+                userId,
+                { 
+                    confirmed: true,
+                    dateConfirmed: new Date()
+                },
+                {
+                    select: '-createdBy -loginAttempts -confirmationCode',
+                    new: true
+                }
+            ),
+            // Reactivar needs (no necesitamos capturar el resultado)
+            Need.updateMany(
+                { userId: userId },
+                { 
+                    activated: true,
+                    $set: { updatedAt: new Date() }
+                }
+            )
+        ]);
 
         if (!updatedUser) {
-            return res.status(404).json({
-                success: false,
-                message: 'Usuario no encontrado'
-            });
+            throw new Error('Usuario no encontrado');
         }
 
-        // Enviar email de confirmación al usuario
+        // Enviar email
         try {
             await serviceEmail.sendMailAccountActivated(updatedUser.email, updatedUser.userName);
         } catch (emailError) {
             console.error('Error enviando email de confirmación:', emailError);
-            // Continuamos aunque falle el email
         }
 
         return res.status(200).json({
@@ -176,7 +183,6 @@ const activateUser = async (req, res) => {
 //crear metodo para desactivar cuenta
 const deactivateUser = async (req, res) => {
     try {
-        // Desencriptar el userId del parámetro
         const userId = crypt.decrypt(req.params.userId);
         
         if (!userId) {
@@ -186,32 +192,39 @@ const deactivateUser = async (req, res) => {
             });
         }
 
-        // Buscar el usuario y actualizar su estado
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { 
-                confirmed: false,
-                dateDeactivated: new Date()
-            },
-            {
-                select: '-createdBy -loginAttempts -confirmationCode',
-                new: true
-            }
-        );
+        // Ejecutar operaciones en paralelo
+        const [updatedUser] = await Promise.all([
+            // Desactivar usuario
+            User.findByIdAndUpdate(
+                userId,
+                { 
+                    confirmed: false,
+                    dateDeactivated: new Date()
+                },
+                {
+                    select: '-createdBy -loginAttempts -confirmationCode',
+                    new: true
+                }
+            ),
+            // Desactivar needs (no necesitamos capturar el resultado)
+            Need.updateMany(
+                { userId: userId },
+                { 
+                    activated: false,
+                    $set: { updatedAt: new Date() }
+                }
+            )
+        ]);
 
         if (!updatedUser) {
-            return res.status(404).json({
-                success: false,
-                message: 'Usuario no encontrado'
-            });
+            throw new Error('Usuario no encontrado');
         }
 
-        // Enviar email de notificación al usuario
+        // Enviar email
         try {
             await serviceEmail.sendMailAccountDeactivated(updatedUser.email, updatedUser.userName);
         } catch (emailError) {
             console.error('Error enviando email de desactivación:', emailError);
-            // Continuamos aunque falle el email
         }
 
         return res.status(200).json({
