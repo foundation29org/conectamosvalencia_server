@@ -73,12 +73,12 @@ api.post('/activateuser/:userId', corsWithOptions, auth(roles.SuperAdmin), userC
 api.post('/deactivateuser/:userId', corsWithOptions, auth(roles.SuperAdmin), userCtrl.deactivateUser)
 
 
-api.get('/admin/allusers', corsWithOptions, auth(roles.AdminSuperAdmin), admninUsersCtrl.getAllUsers)
+api.get('/admin/allusers', corsWithOptions, auth(roles.SuperAdmin), admninUsersCtrl.getAllUsers)
 
 
-api.post('/needs/:userId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.createNeed)
-api.put('/needs/:userId/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateNeed)
-api.delete('/needs/:userId/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.deleteNeed)
+api.post('/needs/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.createNeed)
+api.put('/needs/:userId/:needId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.updateNeed)
+api.delete('/needs/:userId/:needId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.deleteNeed)
 api.delete('/superadmin/needs/:needId', corsWithOptions, auth(roles.SuperAdmin), needsCtrl.superadminDeleteNeed)
 
 //needs/phone
@@ -90,7 +90,7 @@ api.get('/needs/complete', corsWithOptions, auth(roles.AdminSuperAdmin), needsCt
 api.get('/needsuser/complete/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.getAllNeedsCompleteForUser)
 //api.delete('/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.deleteNeed)
 //update status
-api.put('/needs/status/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateStatus)
+api.put('/status/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateStatus)
 
 /*api.get('/testToken', auth, (req, res) => {
 	res.status(200).send(true)
