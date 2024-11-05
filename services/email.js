@@ -177,6 +177,11 @@ function sendEmailLogin (email, randomstring){
         client_server : client_server,
         email : email,
         key : randomstring
+      },
+      headers: {
+        'List-Unsubscribe': `<mailto:support@foundation29.org?subject=unsubscribe>`,
+        'Feedback-ID': 'ConectamosValencia:foundation29:login:gmail',
+        'X-Mailer': 'ConectamosValencia'
       }
     };
 
