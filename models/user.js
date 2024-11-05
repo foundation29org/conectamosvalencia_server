@@ -22,7 +22,7 @@ const UserSchema = Schema({
 		required: 'Email address is required',
 		match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
 	},
-	role: { type: String, required: true, enum: ['Admin'], default: 'Admin' },
+	role: { type: String, required: true, enum: ['User'], default: 'User' },
 	position: { type: String, default: '' },
 	institution: { type: String, default: '' },
 	phone: { type: String, default: '' },

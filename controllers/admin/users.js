@@ -21,8 +21,8 @@ async function getInfoUser() {
     return new Promise(async (resolve, reject) => {
         try {
             const users = await User.find(
-                { role: 'Admin' }, 
-                'userName position institution phone confirmed email'
+                { role: { $in: ['User', 'Admin'] } }, 
+                'userName position institution phone confirmed email role lastLogin'
             );
             
             if (!users || users.length === 0) {
@@ -37,7 +37,9 @@ async function getInfoUser() {
                 position: user.position || '',
                 institution: user.institution || '',
                 phone: user.phone || '',
-                confirmed: user.confirmed || false
+                confirmed: user.confirmed || false,
+                role: user.role || '',
+                lastLogin: user.lastLogin || null
             }));
 
             resolve(usersInfo);

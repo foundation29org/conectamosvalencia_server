@@ -8,10 +8,39 @@ const createNeed = async (req, res) => {
         const userId = req.params.userId;
         const { type, needs, otherNeeds, details, location, timestamp } = req.body;
 
-        if ( !type || !userId || (!needs && !otherNeeds)) {
+        // Array para almacenar mensajes de error
+        const errors = [];
+
+        // Validar tipo
+        if (!type) {
+            errors.push('El tipo es requerido');
+        } else if (!['need', 'offer'].includes(type)) {
+            errors.push('El tipo debe ser "need" u "offer"');
+        }
+
+        // Validar userId
+        if (!userId) {
+            errors.push('El ID de usuario es requerido');
+        }
+
+        // Validar necesidades
+        if (!needs && !otherNeeds) {
+            errors.push('Debe especificar al menos una necesidad o completar otras necesidades');
+        }
+
+        // Validar ubicación para necesidades
+        if (type === 'need') {
+            if (!location || !location.lat || !location.lng) {
+                errors.push('La ubicación es requerida para las necesidades');
+            }
+        }
+
+        // Si hay errores, retornar respuesta con todos los errores
+        if (errors.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Faltan datos requeridos'
+                message: 'Error de validación',
+                errors: errors
             });
         }
 
@@ -54,19 +83,70 @@ const createNeed = async (req, res) => {
 //crea esta funcion api.put('/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateNeed)
 const updateNeed = async (req, res) => {
     try {
-        //primero asegurarse de que el usuario que esta actualizando la necesidad sea el mismo que la creo
         const needId = req.params.needId;
         const userId = req.params.userId;
         const decryptedUserId = crypt.decrypt(userId);
+
+        // Verificar si la necesidad existe
         const need = await Need.findById(needId);
+        if (!need) {
+            return res.status(404).json({
+                success: false,
+                message: 'Necesidad no encontrada'
+            });
+        }
+
+        // Verificar permisos
         if (need.userId !== decryptedUserId) {
             return res.status(403).json({
                 success: false,
                 message: 'No tienes permisos para actualizar esta necesidad'
             });
         }
-        //actualizar la necesidad
-        const updatedNeed = await Need.findByIdAndUpdate(needId, req.body, { new: true });
+
+        // Validar los datos de actualización
+        const { type, needs, otherNeeds, details, location } = req.body;
+        const errors = [];
+
+        // Validar tipo
+        if (type && !['need', 'offer'].includes(type)) {
+            errors.push('El tipo debe ser "need" u "offer"');
+        }
+
+        // Validar necesidades
+        if (!needs && !otherNeeds) {
+            errors.push('Debe especificar al menos una necesidad o completar otras necesidades');
+        }
+
+        // Validar ubicación para necesidades
+        if (type === 'need') {
+            if (!location || !location.lat || !location.lng) {
+                errors.push('La ubicación es requerida para las necesidades');
+            }
+        }
+
+        // Si hay errores de validación, retornar error
+        if (errors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Error de validación',
+                errors: errors
+            });
+        }
+
+        // Actualizar la necesidad
+        const updatedNeed = await Need.findByIdAndUpdate(
+            needId, 
+            {
+                ...req.body,
+                timestamp: new Date() // Actualizar timestamp si es necesario
+            }, 
+            { 
+                new: true,
+                runValidators: true // Ejecutar validadores del esquema
+            }
+        );
+
         res.status(200).json({
             success: true,
             data: updatedNeed,
@@ -87,7 +167,7 @@ const getAllNeedsComplete = async (req, res) => {
         // Obtener todas las necesidades
         // Puedes añadir .sort({ timestamp: -1 }) si quieres ordenar por fecha descendente
         const needs = await Need.find({ 
-            status: { $ne: 'completed' },
+            //status: { $ne: 'completed' },
             activated: true  // Añadir este filtro
         });
         res.status(200).json({
