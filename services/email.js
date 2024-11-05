@@ -182,7 +182,9 @@ function sendEmailLogin (email, randomstring){
         'List-Unsubscribe': `<mailto:support@foundation29.org?subject=unsubscribe>`,
         'Feedback-ID': 'ConectamosValencia:foundation29:login:gmail',
         'X-Mailer': 'ConectamosValencia'
-      }
+      },
+      skipNotification: true, // Evita notificaciones automáticas de rebote
+      replyTo: 'support@foundation29.org'
     };
 
     transporter.sendMail(mailOptions, function(error, info){
