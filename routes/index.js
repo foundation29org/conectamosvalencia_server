@@ -13,6 +13,7 @@ const roles = require('../middlewares/roles')
 const api = express.Router()
 const cors = require('cors')
 const config = require('../config')
+const needsLimiter = require('../middlewares/rateLimiter')
 
 const whitelist = config.allowedOrigins;
 
@@ -62,35 +63,27 @@ function corsWithOptions(req, res, next) {
 
 
 
-api.post('/signup', corsWithOptions, userCtrl.signUp)
-
-api.post('/login', corsWithOptions, userCtrl.login)
-api.post('/checkLogin', corsWithOptions, userCtrl.checkLogin)
-
-
-
-api.post('/activateuser/:userId', corsWithOptions, auth(roles.SuperAdmin), userCtrl.activateUser)
-api.post('/deactivateuser/:userId', corsWithOptions, auth(roles.SuperAdmin), userCtrl.deactivateUser)
+api.post('/signup', corsWithOptions, needsLimiter, userCtrl.signUp)
+api.post('/login', corsWithOptions, needsLimiter, userCtrl.login)
+api.get('/me', corsWithOptions, needsLimiter, userCtrl.getMe)
+api.post('/logout', corsWithOptions, needsLimiter, userCtrl.logout)
+api.post('/checkLogin', corsWithOptions, needsLimiter, userCtrl.checkLogin)
+api.post('/activateuser/:userId', corsWithOptions, needsLimiter, auth(roles.SuperAdmin), userCtrl.activateUser)
+api.post('/deactivateuser/:userId', corsWithOptions, needsLimiter, auth(roles.SuperAdmin), userCtrl.deactivateUser)
 
 
-api.get('/admin/allusers', corsWithOptions, auth(roles.SuperAdmin), admninUsersCtrl.getAllUsers)
+api.get('/admin/allusers', corsWithOptions, needsLimiter, auth(roles.SuperAdmin), admninUsersCtrl.getAllUsers)
 
 
-api.post('/needs/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.createNeed)
-api.put('/needs/:userId/:needId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.updateNeed)
-api.delete('/needs/:userId/:needId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.deleteNeed)
-api.delete('/superadmin/needs/:needId', corsWithOptions, auth(roles.SuperAdmin), needsCtrl.superadminDeleteNeed)
-
-//needs/phone
-api.get('/needs/phone/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getPhone)
-
-
-api.get('/needs', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getAllNeedsForHeatmap)
-api.get('/needs/complete', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getAllNeedsComplete)
-api.get('/needsuser/complete/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.getAllNeedsCompleteForUser)
-//api.delete('/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.deleteNeed)
-//update status
-api.put('/status/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateStatus)
+api.post('/needs/:userId', corsWithOptions, needsLimiter, auth(roles.AllLessResearcher), needsCtrl.createNeed)
+api.put('/needs/:userId/:needId', corsWithOptions, needsLimiter, auth(roles.AllLessResearcher), needsCtrl.updateNeed)
+api.delete('/needs/:userId/:needId', corsWithOptions, needsLimiter, auth(roles.AllLessResearcher), needsCtrl.deleteNeed)
+api.delete('/superadmin/needs/:needId', corsWithOptions, needsLimiter, auth(roles.SuperAdmin), needsCtrl.superadminDeleteNeed)
+api.get('/needs/phone/:needId', corsWithOptions, needsLimiter, auth(roles.AdminSuperAdmin), needsCtrl.getPhone)
+api.get('/needs', corsWithOptions, auth(roles.AdminSuperAdmin), needsLimiter, needsCtrl.getAllNeedsForHeatmap)
+api.get('/needs/complete', corsWithOptions, auth(roles.AdminSuperAdmin), needsLimiter, needsCtrl.getAllNeedsComplete)
+api.get('/needsuser/complete/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsLimiter, needsCtrl.getAllNeedsCompleteForUser)
+api.put('/status/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsLimiter, needsCtrl.updateStatus)
 
 /*api.get('/testToken', auth, (req, res) => {
 	res.status(200).send(true)

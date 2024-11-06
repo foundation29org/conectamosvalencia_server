@@ -8,22 +8,41 @@ const bodyParser = require('body-parser');
 const app = express()
 const api = require ('./routes')
 const path = require('path')
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const helmet = require('helmet');
 //CORS middleware
 
-function setCrossDomain(req, res, next) {
-  //instead of * you can define ONLY the sources that we allow.
-  res.header('Access-Control-Allow-Origin', '*');
-  //http methods allowed for CORS.
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Origin, Accept, Accept-Language, Origin, User-Agent');
-  //res.header('Access-Control-Allow-Headers', '*');
-  next();
-}
+app.use(cookieParser());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
+        : ['http://localhost:4200'], // Dominio en desarrollo
+    credentials: true,
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
+    exposedHeaders: ['set-cookie']
+}));
+
+// Configuración de seguridad
+app.use(helmet({
+  contentSecurityPolicy: false, // Deshabilitar CSP para compatibilidad
+  frameguard: true,
+  hidePoweredBy: true,
+  hsts: true,
+  ieNoOpen: true,
+  noSniff: true,
+  xssFilter: true
+}));
 
 app.use(bodyParser.urlencoded({limit: '50mb', extended: false}))
 app.use(bodyParser.json({limit: '50mb'}))
-app.use(setCrossDomain);
-
+// Añadir antes de las rutas
+app.use((req, res, next) => {
+  console.log('Request cookies:', req.cookies);
+  console.log('Request headers:', req.headers);
+  next();
+});
 // use the forward slash with the module api api folder created routes
 app.use('/api',api)
 

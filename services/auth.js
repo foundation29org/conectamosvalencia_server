@@ -75,6 +75,7 @@ function decodeToken(token, roles){
 				})
 			}
 		}catch (err){
+			console.log('err', err);
 			var messageresult='Invalid Token';
 			if(err.message == "Token expired"){
 				messageresult = err.message;
