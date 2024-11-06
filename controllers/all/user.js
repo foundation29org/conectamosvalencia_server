@@ -208,10 +208,12 @@ function getMe(req, res) {
 	  }
   
 	  // Verificar y decodificar token
-	  const decoded = jwt.decode(token, config.SECRET);
+	  console.log('token', token);
+	  const decoded = jwt.decode(token, config.SECRET_TOKEN);
 	  console.log('decoded', decoded);
 	  // Buscar usuario
-	  User.findById(decoded.sub, (err, user) => {
+	  let userId = crypt.decrypt(decoded.sub);
+	  User.findById(userId, (err, user) => {
 		if (err || !user) {
 		  return res.status(401).json({ message: 'Invalid token' });
 		}
@@ -219,9 +221,7 @@ function getMe(req, res) {
 		// Devolver info del usuario
 		res.json({
 		 sub: crypt.encrypt(user._id.toString()),
-		  email: user.email,
-		  role: user.role,
-		  userName: user.userName
+		  role: user.role
 		  // ... otros campos necesarios
 		});
 	  });
@@ -337,6 +337,7 @@ const checkLogin = async (req, res) => {
         }
 
         // Generar token
+		console.log('user', user);
         const token = serviceAuth.createToken(user);
 		// Configurar cookie
        
