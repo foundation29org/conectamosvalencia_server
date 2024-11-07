@@ -25,41 +25,62 @@ app.use(helmet({
               "'self'",
               "'unsafe-inline'",
               "'unsafe-eval'",
-              "https://conectamosvalencia.com",
-              "https://*.conectamosvalencia.com"
+              "https://apis.google.com",
+              "https://maps.googleapis.com",
+              "https://www.google.com",
+              "https://www.gstatic.com",
+              "https://kit.fontawesome.com",
+              "https://www.googletagmanager.com",
+              "https://static.hotjar.com"
           ],
           styleSrc: [
               "'self'",
               "'unsafe-inline'",
-              "https://conectamosvalencia.com",
-              "https://*.conectamosvalencia.com"
+              "https://fonts.googleapis.com",
+              "https://kit-free.fontawesome.com",
+              "https://ka-f.fontawesome.com"
           ],
           imgSrc: [
               "'self'",
               "data:",
               "blob:",
               "https:",
-              "https://conectamosvalencia.com",
-              "https://*.conectamosvalencia.com"
+              "https://maps.gstatic.com",
+              "https://maps.googleapis.com"
+          ],
+          fontSrc: [
+              "'self'",
+              "data:",
+              "https://fonts.gstatic.com",
+              "https://kit-free.fontawesome.com",
+              "https://ka-f.fontawesome.com"
+          ],
+          frameSrc: [
+              "'self'",
+              "https://www.google.com",
+              "https://vars.hotjar.com"
           ],
           connectSrc: [
               "'self'",
-              "https://conectamosvalencia.com",
-              "https://*.conectamosvalencia.com",
-              "wss://conectamosvalencia.com",
-              "wss://*.conectamosvalencia.com"
+              "http://localhost:8443",
+              "https://apis.google.com",
+              "https://maps.googleapis.com",
+              "https://*.hotjar.com",
+              "wss://*.hotjar.com",
+              "https://*.google-analytics.com",
+              "https://analytics.google.com",
+              "https://stats.g.doubleclick.net",
+              "https://ka-f.fontawesome.com"
           ],
-          fontSrc: ["'self'", "data:", "https:"],
+          workerSrc: ["'self'", "blob:"],
+          childSrc: ["blob:"],
           objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'none'"],
-          formAction: ["'self'"],
-          upgradeInsecureRequests: []
+          mediaSrc: ["'self'"]
       }
   },
-  crossOriginEmbedderPolicy: false,  // Añadido
-  crossOriginOpenerPolicy: false,    // Añadido
-  crossOriginResourcePolicy: false,   // Añadido
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false
 }));
 
 // Resto de la configuración de middleware
@@ -72,6 +93,16 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
   exposedHeaders: ['set-cookie']
 }));
+
+// Añadir cabeceras de seguridad adicionales
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 
+      'geolocation=(self), camera=(), microphone=(), payment=(), usb=()');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
 /*app.use(cors({
     origin: config.NODE_ENV === 'production' 
         ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
@@ -135,7 +166,7 @@ app.use(helmet({
   referrerPolicy: {
       policy: 'no-referrer-when-downgrade'
   }
-}));*/
+}));
 
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
@@ -148,7 +179,7 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 
     'geolocation=(), camera=(), microphone=(), payment=(), usb=()');
   next();
-});
+});*/
 
 app.use(bodyParser.urlencoded({
   limit: '1mb', 
