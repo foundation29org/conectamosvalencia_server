@@ -8,31 +8,116 @@ const bodyParser = require('body-parser');
 const app = express()
 const api = require ('./routes')
 const path = require('path')
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const helmet = require('helmet');
 //CORS middleware
 
-function setCrossDomain(req, res, next) {
-  //instead of * you can define ONLY the sources that we allow.
-  res.header('Access-Control-Allow-Origin', '*');
-  //http methods allowed for CORS.
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Access-Control-Allow-Origin, Accept, Accept-Language, Origin, User-Agent');
-  //res.header('Access-Control-Allow-Headers', '*');
-  next();
-}
+app.disable('x-powered-by');
 
-app.use(bodyParser.urlencoded({limit: '50mb', extended: false}))
-app.use(bodyParser.json({limit: '50mb'}))
-app.use(setCrossDomain);
+app.use(cookieParser());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
+        : ['http://localhost:4200'], // Dominio en desarrollo
+    credentials: true,
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
+    exposedHeaders: ['set-cookie']
+}));
+
+app.use(helmet({
+  hidePoweredBy: true, // Ocultar cabecera X-Powered-By
+  contentSecurityPolicy: {
+      directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+              "'self'",
+              "'unsafe-inline'", // Si necesitas scripts inline
+              "https://apis.google.com", // Para APIs de Google si las usas
+              "https://www.google-analytics.com" // Para Google Analytics si lo usas
+          ],
+          styleSrc: [
+              "'self'",
+              "'unsafe-inline'" // Si necesitas estilos inline
+          ],
+          imgSrc: [
+              "'self'",
+              "data:",
+              "https:",
+              "blob:"
+          ],
+          connectSrc: [
+              "'self'",
+              "https://api.conectamosvalencia.com",
+              "wss://api.conectamosvalencia.com" // Si usas WebSockets
+          ],
+          fontSrc: [
+              "'self'",
+              "data:",
+              "https:"
+          ],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          formAction: ["'self'"],
+          upgradeInsecureRequests: []
+      }
+  },
+  frameguard: {
+      action: 'DENY'
+  },
+  hidePoweredBy: true,
+  hsts: {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: {
+      policy: 'no-referrer-when-downgrade'
+  }
+}));
+
+// Añadir manualmente algunas cabeceras adicionales de seguridad
+app.use((req, res, next) => {
+  // Eliminar cabeceras que exponen información
+  res.removeHeader('X-Powered-By');
+  res.removeHeader('Server');
+  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Permissions-Policy', 
+    'geolocation=(), camera=(), microphone=(), payment=(), usb=()');
+  next();
+});
+
+app.use(bodyParser.urlencoded({
+  limit: '1mb', 
+  extended: false,
+  parameterLimit: 1000 // Limitar número de parámetros
+}));
+
+app.use(bodyParser.json({
+  limit: '1mb',
+  strict: true // Rechazar payload que no sea JSON válido
+}));
+
+// Logging de desarrollo (solo si es necesario)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+      console.log('Request cookies:', req.cookies);
+      console.log('Request headers:', req.headers);
+      next();
+  });
+}
 
 // use the forward slash with the module api api folder created routes
 app.use('/api',api)
 
 app.use('/apidoc',express.static('apidoc', {'index': ['index.html']}))
-
-/*app.use(express.static(path.join(__dirname, 'apidoc')));*/
-/*app.get('/doc', function (req, res) {
-    res.sendFile('apidoc/index.html', { root: __dirname });
- });*/
 
 //ruta angular, poner carpeta dist publica
 app.use(express.static(path.join(__dirname, 'dist')));

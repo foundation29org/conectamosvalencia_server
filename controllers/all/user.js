@@ -1,5 +1,3 @@
-// functions for each call of the api on user. Use the user model
-
 'use strict'
 
 // add the user model
@@ -9,114 +7,417 @@ const serviceEmail = require('../../services/email')
 const crypt = require('../../services/crypt')
 const config = require('../../config')
 const Need = require('../../models/need')
+const axios = require('axios');
+const logger = require('../../services/insights');
+const jwt = require('jwt-simple')
 
-function login(req, res) {
-	// attempt to authenticate user
-	req.body.email = (req.body.email).toLowerCase();
-	User.getAuthenticated(req.body.email, function (err, user, reason) {
-		if (err) return res.status(500).send({ message: err })
-		let randomstring = Math.random().toString(36).slice(-12);
-		let dateTimeLogin = Date.now();
-		if (!user) {
-			//return res.status(500).send({ message: `Fail` })
-			var reasons = User.failedLogin;
-			switch (reason) {
-				case reasons.NOT_FOUND:
-					return res.status(202).send({
-						message: 'Login failed'
-					})
-					break;
-				case reasons.PASSWORD_INCORRECT:
-					// note: these cases are usually treated the same - don't tell
-					// the user *why* the login failed, only that it did
-					return res.status(202).send({
-						message: 'Login failed'
-					})
-					break;
-				case reasons.MAX_ATTEMPTS:
-					// send email or otherwise notify user that account is
-					// temporarily locked
-					return res.status(202).send({
-						message: 'Account is temporarily locked'
-					})
-					break;
-				case reasons.UNACTIVATED:
-					return res.status(202).send({
-						message: 'Account is unactivated'
-					})
-					break;
-				case reasons.BLOCKED:
-					return res.status(202).send({
-						message: 'Account is blocked'
-					})
-					break;
-			}
-		} else {
-			User.findOne({ 'email': req.body.email }, function (err, user2) {
-				if (err){
-					insights.error(err);
-					return res.status(500).send({ message: `Error creating the user: ${err}` })
-				}
-				if (!user2) {
-					return res.status(500).send({ message: `Fail` })
-				} else {
-					User.findByIdAndUpdate(user2._id, { confirmationCode: randomstring, dateTimeLogin: dateTimeLogin }, { new: true }, (err, userUpdated) => {
-						if (err){
-							insights.error(err);
-							return res.status(500).send({ message: `Error making the request: ${err}` })
-						}else{
-							if(userUpdated){
-								//send email
-								serviceEmail.sendEmailLogin(userUpdated.email, userUpdated.confirmationCode)
-								return res.status(200).send({
-									message: 'Check email'
-								})
-							}else{
-								insights.error("The user does not exist");
-								return res.status(404).send({ code: 208, message: `The user does not exist` })
-							}
-							
-						}
-						
-					})
-				}
-			})
-		}
+const login = async (req, res) => {
+    try {
+        // Log del intento de login
+        logger.info('Intento de inicio de sesión', {
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            ip: req.ip || req.connection.remoteAddress
+        });
 
-	})
-}
+        // Validar que existe email
+        if (!req.body.email) {
+            logger.warn('Intento de login sin email', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Email no proporcionado'
+            });
+        }
 
-function checkLogin(req, res) {
-	User.findOne({ 'email': req.body.email, 'confirmationCode': req.body.confirmationCode }, function (err, user2) {
-		if (err){
-			insights.error(err);
-			return res.status(500).send({ message: `Error creating the user: ${err}` })
+        // Sanitizar email
+        const sanitizedEmail = String(req.body.email).toLowerCase().trim();
+
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(sanitizedEmail)) {
+            logger.warn('Intento de login con formato de email inválido', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Formato de email inválido'
+            });
+        }
+
+        // Generar código de confirmación
+        const randomstring = Math.random().toString(36).slice(-12);
+        const dateTimeLogin = Date.now();
+
+        // Intentar autenticar usuario
+        User.getAuthenticated(sanitizedEmail, async function (err, user, reason) {
+            if (err) {
+                logger.error('Error en autenticación', {
+                    error: err,
+                    email: '***@' + sanitizedEmail.split('@')[1],
+                    ip: req.ip || req.connection.remoteAddress
+                });
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error en la autenticación'
+                });
+            }
+
+            // Manejar caso de usuario no encontrado o bloqueado
+            if (!user) {
+                const reasons = User.failedLogin;
+                let message = 'Si existe una cuenta asociada, recibirá un correo con el enlace de inicio de sesión.';
+                let statusCode = 202;
+
+                switch (reason) {
+                    case reasons.NOT_FOUND:
+                        logger.info('Intento de login con usuario no encontrado', {
+                            email: '***@' + sanitizedEmail.split('@')[1],
+                            ip: req.ip || req.connection.remoteAddress
+                        });
+                        break;
+
+                    case reasons.PASSWORD_INCORRECT:
+                        logger.warn('Intento de login con contraseña incorrecta', {
+                            email: '***@' + sanitizedEmail.split('@')[1],
+                            ip: req.ip || req.connection.remoteAddress
+                        });
+                        break;
+
+                    case reasons.MAX_ATTEMPTS:
+                        message = 'Cuenta temporalmente bloqueada';
+                        statusCode = 429;
+                        logger.warn('Cuenta bloqueada por máximo de intentos', {
+                            email: '***@' + sanitizedEmail.split('@')[1],
+                            ip: req.ip || req.connection.remoteAddress
+                        });
+                        break;
+
+                    case reasons.UNACTIVATED:
+                        message = 'Cuenta no activada';
+                        logger.warn('Intento de login en cuenta no activada', {
+                            email: '***@' + sanitizedEmail.split('@')[1],
+                            ip: req.ip || req.connection.remoteAddress
+                        });
+                        break;
+
+                    case reasons.BLOCKED:
+                        message = 'Cuenta bloqueada';
+                        logger.warn('Intento de login en cuenta bloqueada', {
+                            email: '***@' + sanitizedEmail.split('@')[1],
+                            ip: req.ip || req.connection.remoteAddress
+                        });
+                        break;
+                }
+
+                return res.status(statusCode).json({
+                    success: false,
+                    message
+                });
+            }
+
+            // Usuario encontrado y válido
+            try {
+                // Actualizar código de confirmación
+                const userUpdated = await User.findByIdAndUpdate(
+                    user._id,
+                    {
+                        confirmationCode: randomstring,
+                        dateTimeLogin: dateTimeLogin
+                    },
+                    { new: true }
+                );
+
+                if (!userUpdated) {
+                    logger.error('Error actualizando código de confirmación', {
+                        userId: user._id,
+                        email: '***@' + sanitizedEmail.split('@')[1],
+                        ip: req.ip || req.connection.remoteAddress
+                    });
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error actualizando datos de login'
+                    });
+                }
+
+                // Enviar email de login
+                try {
+                    await serviceEmail.sendEmailLogin(userUpdated.email, userUpdated.confirmationCode);
+                    logger.info('Email de login enviado exitosamente', {
+                        userId: user._id,
+                        email: '***@' + sanitizedEmail.split('@')[1],
+                        ip: req.ip || req.connection.remoteAddress
+                    });
+                } catch (emailError) {
+                    logger.error('Error enviando email de login', {
+                        error: emailError,
+                        userId: user._id,
+                        email: '***@' + sanitizedEmail.split('@')[1],
+                        ip: req.ip || req.connection.remoteAddress
+                    });
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error enviando email de login'
+                    });
+                }
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Check email'
+                });
+
+            } catch (updateError) {
+                logger.error('Error en proceso de login', {
+                    error: updateError,
+                    userId: user._id,
+                    email: '***@' + sanitizedEmail.split('@')[1],
+                    ip: req.ip || req.connection.remoteAddress
+                });
+
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error en el proceso de login'
+                });
+            }
+        });
+
+    } catch (error) {
+        logger.error('Error general en login', {
+            error,
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        res.status(500).json({
+            success: false,
+            message: 'Error en el proceso de login',
+            error: process.env.NODE_ENV === 'production' ? 
+                'Error interno del servidor' : 
+                error.message
+        });
+    }
+};
+
+function getMe(req, res) {
+	// Aquí debes verificar la cookie y devolver la info del usuario
+	try {
+	  // Verificar token de la cookie
+	  const token = req.cookies.authToken;
+	  if (!token) {
+		return res.status(401).json({ message: 'No token provided' });
+	  }
+  
+	  // Verificar y decodificar token
+	  console.log('token', token);
+	  const decoded = jwt.decode(token, config.SECRET_TOKEN);
+	  console.log('decoded', decoded);
+	  // Buscar usuario
+	  let userId = crypt.decrypt(decoded.sub);
+	  User.findById(userId, (err, user) => {
+		if (err || !user) {
+		  return res.status(401).json({ message: 'Invalid token' });
 		}
-		if (!user2) {
-			return res.status(500).send({ message: `Fail` })
-		} else {
-			var limittime = new Date(); // just for example, can be any other time
-			var myTimeSpan = 5*60*1000; // 5 minutes in milliseconds
-			limittime.setTime(limittime.getTime() - myTimeSpan);
-			if(limittime.getTime() < user2.dateTimeLogin.getTime()){
-				return res.status(200).send({
-					message: 'You have successfully logged in',
-					token: serviceAuth.createToken(user2)
-				})
-			}else{
-				return res.status(200).send({
-					message: 'Link expired'
-				})
-			}
-		}
-	})
-}
+  
+		// Devolver info del usuario
+		res.json({
+		 sub: crypt.encrypt(user._id.toString()),
+		  role: user.role
+		  // ... otros campos necesarios
+		});
+	  });
+	} catch (error) {
+		console.log('error', error);
+	  return res.status(401).json({ message: 'Invalid token' });
+	}
+  }
+
+
+const logout = async (req, res) => {
+    try {
+        res.clearCookie('authToken', {
+            httpOnly: true,
+            secure: config.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+            domain: config.COOKIE_DOMAIN
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+    } catch (error) {
+        logger.error('Error en logout', {
+            error,
+            ip: req.ip || req.connection.remoteAddress
+        });
+        res.status(500).json({
+            success: false,
+            message: 'Error logging out'
+        });
+    }
+};
+
+const checkLogin = async (req, res) => {
+    try {
+        // Log del intento de verificación de login
+        logger.info('Intento de verificación de login', {
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            hasConfirmationCode: !!req.body.confirmationCode,
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        // Validar campos requeridos
+        if (!req.body.email || !req.body.confirmationCode) {
+            logger.warn('Verificación de login con campos faltantes', {
+                hasEmail: !!req.body.email,
+                hasConfirmationCode: !!req.body.confirmationCode,
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Email and confirmation code are required'
+            });
+        }
+
+        // Sanitizar datos
+        const sanitizedData = {
+            email: String(req.body.email).toLowerCase().trim(),
+            confirmationCode: String(req.body.confirmationCode).trim()
+        };
+
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(sanitizedData.email)) {
+            logger.warn('Verificación de login con formato de email inválido', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format'
+            });
+        }
+
+        // Buscar usuario
+		console.log('sanitizedData', sanitizedData);
+        const user = await User.findOne({
+            email: sanitizedData.email,
+            confirmationCode: sanitizedData.confirmationCode
+        });
+
+        // Verificar si se encontró el usuario
+        if (!user) {
+            logger.warn('Verificación de login fallida - Usuario no encontrado o código inválido', {
+                email: '***@' + sanitizedData.email.split('@')[1],
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(401).json({
+                success: false,
+                message: 'Fail'
+            });
+        }
+
+        // Verificar tiempo límite
+        const limitTime = new Date();
+        const timeSpan = 5 * 60 * 1000; // 5 minutos en milisegundos
+        limitTime.setTime(limitTime.getTime() - timeSpan);
+
+        if (limitTime.getTime() >= user.dateTimeLogin.getTime()) {
+            logger.warn('Verificación de login fallida - Código expirado', {
+                userId: user._id,
+                email: '***@' + sanitizedData.email.split('@')[1],
+                loginTime: user.dateTimeLogin,
+                limitTime,
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(200).json({
+                success: false,
+                message: 'Link expired'
+            });
+        }
+
+        // Generar token
+		console.log('user', user);
+        const token = serviceAuth.createToken(user);
+		// Configurar cookie
+       
+        // Log de éxito
+        logger.info('Login verificado exitosamente', {
+            userId: user._id,
+            email: '***@' + sanitizedData.email.split('@')[1],
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+		res.cookie('authToken', token, {
+            httpOnly: config.NODE_ENV === 'production',
+            secure: config.NODE_ENV === 'production', // true en producción
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000, // 24 horas
+            path: '/',
+            domain: config.COOKIE_DOMAIN
+        });
+		console.log('Cookie set:', {
+            token: token.substring(0, 20) + '...',
+            headers: res.getHeaders()
+        });
+
+        // Limpiar código de confirmación después del login exitoso
+        await User.findByIdAndUpdate(user._id, {
+            confirmationCode: null,
+            lastLogin: new Date()
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'You have successfully logged in'
+        });
+
+    } catch (error) {
+        logger.error('Error en verificación de login', {
+            error,
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        return res.status(500).json({
+            success: false,
+            message: 'Login verification failed',
+            error: process.env.NODE_ENV === 'production' ? 
+                'Internal server error' : 
+                error.message
+        });
+    }
+};
 
 const activateUser = async (req, res) => {
     try {
-        const userId = crypt.decrypt(req.params.userId);
+        const encryptedUserId = req.params.userId;
+
+        // Log del intento de activación
+        logger.info('Intento de activación de cuenta', {
+            encryptedUserId,
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        // Validar userId
+        if (!encryptedUserId) {
+            logger.warn('Intento de activación sin userId', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'ID de usuario no válido'
+            });
+        }
+
+        // Desencriptar userId
+        const userId = crypt.decrypt(encryptedUserId);
         
         if (!userId) {
+            logger.warn('Fallo en desencriptación de userId', {
+                encryptedUserId,
+                ip: req.ip || req.connection.remoteAddress
+            });
             return res.status(400).json({
                 success: false,
                 message: 'ID de usuario no válido'
@@ -124,7 +425,7 @@ const activateUser = async (req, res) => {
         }
 
         // Ejecutar operaciones en paralelo
-        const [updatedUser] = await Promise.all([
+        const [updatedUser, needsUpdateResult] = await Promise.all([
             // Activar usuario
             User.findByIdAndUpdate(
                 userId,
@@ -137,7 +438,7 @@ const activateUser = async (req, res) => {
                     new: true
                 }
             ),
-            // Reactivar needs (no necesitamos capturar el resultado)
+            // Reactivar needs
             Need.updateMany(
                 { userId: userId },
                 { 
@@ -147,15 +448,40 @@ const activateUser = async (req, res) => {
             )
         ]);
 
+        // Verificar si el usuario existe
         if (!updatedUser) {
-            throw new Error('Usuario no encontrado');
+            logger.warn('Usuario no encontrado para activación', {
+                userId: 'ENCRYPTED',
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
         }
+
+        // Log de éxito de actualización
+        logger.info('Usuario y necesidades activadas exitosamente', {
+            userId: 'ENCRYPTED',
+            email: updatedUser.email ? '***@' + updatedUser.email.split('@')[1] : 'no-email',
+            needsUpdated: needsUpdateResult.modifiedCount,
+            ip: req.ip || req.connection.remoteAddress
+        });
 
         // Enviar email
         try {
             await serviceEmail.sendMailAccountActivated(updatedUser.email, updatedUser.userName);
+            logger.info('Email de activación enviado', {
+                userId: 'ENCRYPTED',
+                email: '***@' + updatedUser.email.split('@')[1]
+            });
         } catch (emailError) {
-            console.error('Error enviando email de confirmación:', emailError);
+            logger.error('Error enviando email de activación', {
+                error: emailError,
+                userId: 'ENCRYPTED',
+                email: '***@' + updatedUser.email.split('@')[1]
+            });
+            // No devolvemos error al cliente ya que la activación fue exitosa
         }
 
         return res.status(200).json({
@@ -170,11 +496,18 @@ const activateUser = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error activando usuario:', error);
+        logger.error('Error activando usuario', {
+            error,
+            encryptedUserId: req.params.userId,
+            ip: req.ip || req.connection.remoteAddress
+        });
+
         return res.status(500).json({
             success: false,
             message: 'Error al activar el usuario',
-            error: error.message
+            error: process.env.NODE_ENV === 'production' ? 
+                'Error interno del servidor' : 
+                error.message
         });
     }
 };
@@ -183,9 +516,33 @@ const activateUser = async (req, res) => {
 //crear metodo para desactivar cuenta
 const deactivateUser = async (req, res) => {
     try {
-        const userId = crypt.decrypt(req.params.userId);
+        const encryptedUserId = req.params.userId;
+
+        // Log del intento de desactivación
+        logger.info('Intento de desactivación de cuenta', {
+            encryptedUserId,
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        // Validar userId
+        if (!encryptedUserId) {
+            logger.warn('Intento de desactivación sin userId', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'ID de usuario no válido'
+            });
+        }
+
+        // Desencriptar userId
+        const userId = crypt.decrypt(encryptedUserId);
         
         if (!userId) {
+            logger.warn('Fallo en desencriptación de userId', {
+                encryptedUserId,
+                ip: req.ip || req.connection.remoteAddress
+            });
             return res.status(400).json({
                 success: false,
                 message: 'ID de usuario no válido'
@@ -193,7 +550,7 @@ const deactivateUser = async (req, res) => {
         }
 
         // Ejecutar operaciones en paralelo
-        const [updatedUser] = await Promise.all([
+        const [updatedUser, needsUpdateResult] = await Promise.all([
             // Desactivar usuario
             User.findByIdAndUpdate(
                 userId,
@@ -206,7 +563,7 @@ const deactivateUser = async (req, res) => {
                     new: true
                 }
             ),
-            // Desactivar needs (no necesitamos capturar el resultado)
+            // Desactivar needs
             Need.updateMany(
                 { userId: userId },
                 { 
@@ -216,15 +573,40 @@ const deactivateUser = async (req, res) => {
             )
         ]);
 
+        // Verificar si el usuario existe
         if (!updatedUser) {
-            throw new Error('Usuario no encontrado');
+            logger.warn('Usuario no encontrado para desactivación', {
+                userId: 'ENCRYPTED',
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
         }
+
+        // Log de éxito de actualización
+        logger.info('Usuario y necesidades desactivadas exitosamente', {
+            userId: 'ENCRYPTED',
+            email: updatedUser.email ? '***@' + updatedUser.email.split('@')[1] : 'no-email',
+            needsUpdated: needsUpdateResult.modifiedCount,
+            ip: req.ip || req.connection.remoteAddress
+        });
 
         // Enviar email
         try {
             await serviceEmail.sendMailAccountDeactivated(updatedUser.email, updatedUser.userName);
+            logger.info('Email de desactivación enviado', {
+                userId: 'ENCRYPTED',
+                email: '***@' + updatedUser.email.split('@')[1]
+            });
         } catch (emailError) {
-            console.error('Error enviando email de desactivación:', emailError);
+            logger.error('Error enviando email de desactivación', {
+                error: emailError,
+                userId: 'ENCRYPTED',
+                email: '***@' + updatedUser.email.split('@')[1]
+            });
+            // No devolvemos error al cliente ya que la desactivación fue exitosa
         }
 
         return res.status(200).json({
@@ -239,102 +621,171 @@ const deactivateUser = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error desactivando usuario:', error);
+        logger.error('Error desactivando usuario', {
+            error,
+            encryptedUserId: req.params.userId,
+            ip: req.ip || req.connection.remoteAddress
+        });
+
         return res.status(500).json({
             success: false,
             message: 'Error al desactivar el usuario',
-            error: error.message
+            error: process.env.NODE_ENV === 'production' ? 
+                'Error interno del servidor' : 
+                error.message
         });
     }
 };
 
-/**
- * @api {post} https://conectamosvalencia.com/api/api/signUp New account
- * @apiName signUp
- * @apiVersion 1.0.0
- * @apiGroup Account
- * @apiDescription This method allows you to create a user account in ConectamosValencia
- * @apiExample {js} Example usage:
- *  var passwordsha512 = sha512("fjie76?vDh");
- *  var formValue = { email: "example@ex.com", userName: "Peter", password: passwordsha512, lang: "en", group: "None"};
- *   this.http.post('https://conectamosvalencia.com/api/signup',formValue)
- *    .subscribe( (res : any) => {
- *      if(res.message == "Account created"){
- *        console.log("Check the email to activate the account");
- *      }else if(res.message == 'Fail sending email'){
- *        //contact with health29
- *      }else if(res.message == 'user exists'){
- *       ...
- *      }
- *   }, (err) => {
- *     ...
- *   }
- *
- * @apiParam (body) {String} email User email
- * @apiParam (body) {String} userName User name
- * @apiParam (body) {String} password User password using hash <a href="https://es.wikipedia.org/wiki/SHA-2" target="_blank">sha512</a>
- * @apiParam (body) {String} lang Lang of the User. For this, go to  [Get the available languages](#api-Languages-getLangs).
- * We currently have 5 languages, but we will include more. The current languages are:
- * * English: en
- * * Spanish: es
- * * German: de
- * * Dutch: nl
- * * Portuguese: pt
- * @apiParam (body) {String} [group] Group to which the user belongs, if it does not have a group or do not know the group to which belongs, it will be 'None'. If the group is not set, it will be set to 'None' by default.
- * @apiParamExample {json} Request-Example:
- *     {
- *       "email": "example@ex.com",
- *       "userName": "Peter",
- *       "password": "f74f2603939a53656948480ce71f1ce46457b6654fd22c61c1f2ccd3e2c96d1cd02d162b560c4beaf1ae45f4574571dc5cbc1ce040701c0b5c38457988aa00fe97f",
- *       "group": "None",
- *       "lang": "en"
- *     }
- * @apiSuccess {String} message Information about the request. One of the following answers will be obtained:
- * * Account created (The user should check the email to activate the account)
- * * Fail sending email
- * * user exists
- * @apiSuccessExample Success-Response:
- * HTTP/1.1 200 OK
- * {
- *  "message": "Account created"
- * }
- *
- */
+async function verifyCaptcha(token, secretKey) {
+	try {
+	  const response = await axios.post(
+		`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`
+	  );
+	  return response.data;
+	} catch (error) {
+	  console.error('Captcha verification error:', error);
+	  return null;
+	}
+  }
+
+async function signUp(req, res) {
+
+	try {
+		// Log del intento de registro
+        logger.info('Intento de registro de usuario', {
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+        // 1. Validar que exista el token del captcha
+        if (!req.body.captchaToken) {
+            logger.warn('Intento de registro sin captcha', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Token de captcha no proporcionado'
+            });
+        }
 
 
-function signUp(req, res) {
-	let secretKey = config.secretCaptcha; //the secret key from your google admin console;
-	let token = req.body.captchaToken
+		  // 2. Verificar el captcha
+        const captchaResponse = await verifyCaptcha(req.body.captchaToken, config.secretCaptcha);
+        if (!captchaResponse || !captchaResponse.success) {
+			logger.warn('Verificación de captcha fallida', {
+				ip: req.ip || req.connection.remoteAddress,
+				score: captchaResponse && captchaResponse.score ? captchaResponse.score : null
+			});
+            return res.status(400).json({
+                success: false,
+                message: 'Verificación de captcha fallida'
+            });
+        }
+	 
+		// 3. Sanitizar y validar datos de entrada
+        const sanitizedData = {
+            email: String(req.body.email || '').toLowerCase().trim(),
+            userName: String(req.body.userName || '').trim(),
+            position: String(req.body.position || '').trim(),
+            institution: String(req.body.institution || '').trim(),
+            phone: String(req.body.phone || '').trim().replace(/[^\d+]/g, '') // Solo permite números y '+'
+        };
 
-  	//if passed response success message to client
-	  req.body.email = (req.body.email).toLowerCase();
-	  const user = new User({
-		  email: req.body.email,
-		  userName: req.body.userName,
-		  position: req.body.position,
-		  institution: req.body.institution,
-		  phone: req.body.phone,
-		  platform: 'ConectamosValencia'
-	  })
-	  User.findOne({ 'email': req.body.email }, function (err, user2) {
-		  if (err) return res.status(500).send({ message: `Error creating the user: ${err}` })
-		  if (!user2) {
-			  user.save((err, userSaved) => {
-				  if (err) return res.status(500).send({ message: `Error creating the user: ${err}` })
-				  res.status(200).send({ message: 'Account created' })
-			  })
-		  } else {
-			  return res.status(202).send({ message: 'user exists' })
+        // Validar campos requeridos
+        const requiredFields = ['email', 'userName', 'position', 'institution', 'phone'];
+        const missingFields = requiredFields.filter(field => !sanitizedData[field]);
+
+        if (missingFields.length > 0) {
+            logger.warn('Intento de registro con campos faltantes', {
+                missingFields,
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'Campos requeridos faltantes',
+                details: missingFields.reduce((acc, field) => ({
+                    ...acc,
+                    [field]: `${field} es requerido`
+                }), {})
+            });
+        }
+		 // Validar formato de email
+		 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		 if (!emailRegex.test(sanitizedData.email)) {
+			 logger.warn('Intento de registro con email inválido', {
+				 ip: req.ip || req.connection.remoteAddress
+			 });
+			 return res.status(400).json({
+				 success: false,
+				 message: 'Formato de email inválido'
+			 });
+		 }
+
+		 // Validar formato de teléfono
+		 const phoneRegex = /^\+?[\d\s-]{8,}$/;
+		 if (!phoneRegex.test(sanitizedData.phone)) {
+			 logger.warn('Intento de registro con teléfono inválido', {
+				 ip: req.ip || req.connection.remoteAddress
+			 });
+			 return res.status(400).json({
+				 success: false,
+				 message: 'Formato de teléfono inválido'
+			 });
+		 }
+
+		  // 4. Verificar si el usuario existe
+		  const existingUser = await User.findOne({ 'email': sanitizedData.email });
+		  if (existingUser) {
+			  logger.info('Intento de registro con email existente', {
+				  email: '***@' + sanitizedData.email.split('@')[1],
+				  ip: req.ip || req.connection.remoteAddress
+			  });
+			  return res.status(202).json({
+				  success: true,
+				  message: 'Si existe una cuenta asociada, recibirá un correo con más instrucciones.'
+			  });
 		  }
-	  })
 
-	
-  
+		   // 5. Crear el nuevo usuario
+		   const user = new User({
+            ...sanitizedData,
+            platform: 'ConectamosValencia',
+            dateCreated: new Date()
+        });
+
+		// 6. Guardar el usuario
+        const userSaved = await user.save();
+
+        // Log de éxito
+        logger.info('Usuario registrado exitosamente', {
+            userId: userSaved._id,
+            email: '***@' + sanitizedData.email.split('@')[1],
+            ip: req.ip || req.connection.remoteAddress
+        });
+		return res.status(200).send({success: true, message: 'Account created' });
+		  
+
+	} catch (error) {
+		logger.error('Error en registro de usuario', {
+            error,
+            email: req.body.email ? '***@' + req.body.email.split('@')[1] : 'no-email',
+            ip: req.ip || req.connection.remoteAddress
+        });
+
+		console.error('Signup error:', error);
+		return res.status(500).send({ 
+		  message: `Error creating the user: ${error.message}` 
+		});
+	}
+ 
 	
 }
 
 module.exports = {
 	login,
+	getMe,
+	logout,
 	checkLogin,
 	activateUser,
 	deactivateUser,

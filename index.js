@@ -5,9 +5,43 @@
 
 'use strict'
 
+const config = require('./config')
 const mongoose = require('mongoose');
 const app = require('./app')
-const config = require('./config')
+
+let appInsights = require('applicationinsights');
+
+if(config.client_server !== 'http://localhost:4200'){
+    appInsights.setup(config.INSIGHTS)
+        .setAutoDependencyCorrelation(true)
+        .setAutoCollectRequests(true)
+        .setAutoCollectPerformance(true, true)
+        .setAutoCollectExceptions(true)
+        .setAutoCollectDependencies(true)
+        .setAutoCollectConsole(true, true)
+        .setUseDiskRetryCaching(true)
+        .setSendLiveMetrics(true)
+        .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
+        // Añadir estas configuraciones
+        .setAutoCollectHeartbeat(true)
+        .setInternalLogging(true, true)
+        .start();
+
+    // Manejar errores no capturados
+    process.on('uncaughtException', (err) => {
+        appInsights.defaultClient.trackException({ exception: err });
+        console.error('Uncaught Exception:', err);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+        appInsights.defaultClient.trackException({ 
+            exception: new Error('Unhandled Rejection'),
+            properties: { reason: reason }
+        });
+        console.error('Unhandled Rejection:', reason);
+    });
+}
+
 mongoose.Promise = global.Promise
 
 app.listen(config.port, () => {
