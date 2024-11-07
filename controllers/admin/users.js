@@ -6,7 +6,7 @@
 const User = require('../../models/user')
 const crypt = require('../../services/crypt')
 const logger = require('../../services/insights');
-
+const config = require('../../config');
 
 const getAllUsers = async (req, res) => {
     try {
@@ -44,7 +44,7 @@ const getAllUsers = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Error al obtener usuarios',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });

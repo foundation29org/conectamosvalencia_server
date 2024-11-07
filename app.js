@@ -11,13 +11,14 @@ const path = require('path')
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
+const config = require('./config');
 //CORS middleware
 
 app.disable('x-powered-by');
 
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
+    origin: config.NODE_ENV === 'production' 
         ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
         : ['http://localhost:4200'], // Dominio en desarrollo
     credentials: true,
@@ -27,6 +28,25 @@ app.use(cors({
 }));
 
 app.use(helmet({
+  contentSecurityPolicy: false, // Temporalmente deshabilitado para diagnóstico
+  frameguard: {
+      action: 'DENY'
+  },
+  hidePoweredBy: true,
+  hsts: {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: {
+      policy: 'no-referrer-when-downgrade'
+  }
+}));
+
+/*app.use(helmet({
   hidePoweredBy: true, // Ocultar cabecera X-Powered-By
   contentSecurityPolicy: {
       directives: {
@@ -79,7 +99,7 @@ app.use(helmet({
   referrerPolicy: {
       policy: 'no-referrer-when-downgrade'
   }
-}));
+}));*/
 
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
@@ -106,7 +126,7 @@ app.use(bodyParser.json({
 }));
 
 // Logging de desarrollo (solo si es necesario)
-if (process.env.NODE_ENV !== 'production') {
+if (config.NODE_ENV !== 'production') {
   app.use((req, res, next) => {
       console.log('Request cookies:', req.cookies);
       console.log('Request headers:', req.headers);

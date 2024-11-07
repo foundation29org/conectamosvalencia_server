@@ -2,6 +2,7 @@ const Need = require('../models/need');
 const crypt = require('../services/crypt')
 const User = require('../models/user');
 const logger = require('../services/insights');
+const config = require('../config');
 
 const createNeed = async (req, res) => {
     try {
@@ -331,7 +332,7 @@ const getAllNeedsComplete = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener las necesidades',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -417,7 +418,7 @@ const getAllNeedsCompleteForUser = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener las necesidades',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -502,7 +503,7 @@ const getAllNeedsForHeatmap = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener las necesidades',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -605,7 +606,7 @@ const deleteNeed = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al eliminar la necesidad',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -687,7 +688,7 @@ const superadminDeleteNeed = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al eliminar la necesidad',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -797,7 +798,7 @@ const getPhone = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener el teléfono',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -920,7 +921,7 @@ const updateStatus = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al actualizar el estado de la necesidad',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
