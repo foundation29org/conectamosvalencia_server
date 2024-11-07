@@ -191,7 +191,7 @@ const login = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error en el proceso de login',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -382,7 +382,7 @@ const checkLogin = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Login verification failed',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Internal server error' : 
                 error.message
         });
@@ -505,7 +505,7 @@ const activateUser = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Error al activar el usuario',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });
@@ -630,7 +630,7 @@ const deactivateUser = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: 'Error al desactivar el usuario',
-            error: process.env.NODE_ENV === 'production' ? 
+            error: config.NODE_ENV === 'production' ? 
                 'Error interno del servidor' : 
                 error.message
         });

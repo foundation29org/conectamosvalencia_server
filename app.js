@@ -11,13 +11,14 @@ const path = require('path')
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const helmet = require('helmet');
+const config = require('./config');
 //CORS middleware
 
 app.disable('x-powered-by');
 
 app.use(cookieParser());
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
+    origin: config.NODE_ENV === 'production' 
         ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
         : ['http://localhost:4200'], // Dominio en desarrollo
     credentials: true,
@@ -106,7 +107,7 @@ app.use(bodyParser.json({
 }));
 
 // Logging de desarrollo (solo si es necesario)
-if (process.env.NODE_ENV !== 'production') {
+if (config.NODE_ENV !== 'production') {
   app.use((req, res, next) => {
       console.log('Request cookies:', req.cookies);
       console.log('Request headers:', req.headers);
