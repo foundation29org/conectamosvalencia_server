@@ -13,6 +13,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 //CORS middleware
 
+app.disable('x-powered-by');
+
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.NODE_ENV === 'production' 
@@ -25,6 +27,7 @@ app.use(cors({
 }));
 
 app.use(helmet({
+  hidePoweredBy: true, // Ocultar cabecera X-Powered-By
   contentSecurityPolicy: {
       directives: {
           defaultSrc: ["'self'"],
@@ -80,6 +83,9 @@ app.use(helmet({
 
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
+  // Eliminar cabeceras que exponen información
+  res.removeHeader('X-Powered-By');
+  res.removeHeader('Server');
   res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
