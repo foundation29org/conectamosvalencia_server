@@ -17,7 +17,7 @@ const config = require('./config');
 app.disable('x-powered-by');
 
 app.use(cookieParser());
-app.use(helmet({
+/*app.use(helmet({
   contentSecurityPolicy: {
       directives: {
           defaultSrc: ["'self'"],
@@ -83,17 +83,6 @@ app.use(helmet({
   crossOriginResourcePolicy: false
 }));
 
-// Resto de la configuración de middleware
-app.use(cors({
-  origin: config.NODE_ENV === 'production' 
-      ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com']
-      : ['http://localhost:4200'],
-  credentials: true,
-  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
-  exposedHeaders: ['set-cookie']
-}));
-
 // Añadir cabeceras de seguridad adicionales
 app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 
@@ -103,53 +92,70 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
-/*app.use(cors({
-    origin: config.NODE_ENV === 'production' 
-        ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
-        : ['http://localhost:4200'], // Dominio en desarrollo
-    credentials: true,
-    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
-    exposedHeaders: ['set-cookie']
-}));
+*/
+
 
 app.use(helmet({
   hidePoweredBy: true, // Ocultar cabecera X-Powered-By
   contentSecurityPolicy: {
       directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-              "'self'",
-              "'unsafe-inline'", // Si necesitas scripts inline
-              "https://apis.google.com", // Para APIs de Google si las usas
-              "https://www.google-analytics.com" // Para Google Analytics si lo usas
-          ],
-          styleSrc: [
-              "'self'",
-              "'unsafe-inline'" // Si necesitas estilos inline
-          ],
-          imgSrc: [
-              "'self'",
-              "data:",
-              "https:",
-              "blob:"
-          ],
-          connectSrc: [
-              "'self'",
-              "https://api.conectamosvalencia.com",
-              "wss://api.conectamosvalencia.com" // Si usas WebSockets
-          ],
-          fontSrc: [
-              "'self'",
-              "data:",
-              "https:"
-          ],
-          objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'none'"],
-          formAction: ["'self'"],
-          upgradeInsecureRequests: []
-      }
+        defaultSrc: ["'self'"],
+        scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            "https://apis.google.com",
+            "https://maps.googleapis.com",
+            "https://www.google.com",
+            "https://www.gstatic.com",
+            "https://kit.fontawesome.com",
+            "https://www.googletagmanager.com",
+            "https://static.hotjar.com"
+        ],
+        styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+            "https://kit-free.fontawesome.com",
+            "https://ka-f.fontawesome.com"
+        ],
+        imgSrc: [
+            "'self'",
+            "data:",
+            "blob:",
+            "https:",
+            "https://maps.gstatic.com",
+            "https://maps.googleapis.com"
+        ],
+        fontSrc: [
+            "'self'",
+            "data:",
+            "https://fonts.gstatic.com",
+            "https://kit-free.fontawesome.com",
+            "https://ka-f.fontawesome.com"
+        ],
+        frameSrc: [
+            "'self'",
+            "https://www.google.com",
+            "https://vars.hotjar.com"
+        ],
+        connectSrc: [
+            "'self'",
+            "http://localhost:8443",
+            "https://apis.google.com",
+            "https://maps.googleapis.com",
+            "https://*.hotjar.com",
+            "wss://*.hotjar.com",
+            "https://*.google-analytics.com",
+            "https://analytics.google.com",
+            "https://stats.g.doubleclick.net",
+            "https://ka-f.fontawesome.com"
+        ],
+        workerSrc: ["'self'", "blob:"],
+        childSrc: ["blob:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"]
+    }
   },
   frameguard: {
       action: 'DENY'
@@ -168,6 +174,15 @@ app.use(helmet({
   }
 }));
 
+app.use(cors({
+    origin: config.NODE_ENV === 'production' 
+        ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
+        : ['http://localhost:4200'], // Dominio en desarrollo
+    credentials: true,
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
+    exposedHeaders: ['set-cookie']
+}));
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
   // Eliminar cabeceras que exponen información
@@ -179,7 +194,7 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 
     'geolocation=(), camera=(), microphone=(), payment=(), usb=()');
   next();
-});*/
+});
 
 app.use(bodyParser.urlencoded({
   limit: '1mb', 
