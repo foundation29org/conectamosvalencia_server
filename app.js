@@ -150,6 +150,7 @@ app.use(helmet({
             "https://maps.googleapis.com",
             "https://*.hotjar.com",
             "wss://*.hotjar.com",
+            "https://*.hotjar.io",
             "https://*.google-analytics.com",
             "https://analytics.google.com",
             "https://stats.g.doubleclick.net",

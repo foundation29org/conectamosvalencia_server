@@ -14,7 +14,9 @@ function createToken (user){
 		//el id siguiente no debería de ser el id privado, así que habrá que cambiarlo
 		sub: idencrypt,
 		iat: moment().unix(),
-		exp: moment().add(1, 'years').unix(),//years //minutes
+		//exp: moment().add(1, 'years').unix(),//years //minutes
+		//exp: moment().add(1, 'minutes').unix(),//years //minutes
+		exp: moment().add(24, 'hours').unix(),//years //minutes
 		role: user.role
 	}
 	return jwt.encode(payload, config.SECRET_TOKEN)

@@ -202,7 +202,7 @@ function getMe(req, res) {
 	// Aquí debes verificar la cookie y devolver la info del usuario
 	try {
 	  // Verificar token de la cookie
-	  const token = req.cookies.authToken;
+	  const token = req.cookies.cv_auth_token;
 	  if (!token) {
 		return res.status(401).json({ message: 'No token provided' });
 	  }
@@ -234,7 +234,7 @@ function getMe(req, res) {
 
 const logout = async (req, res) => {
     try {
-        res.clearCookie('authToken', {
+        res.clearCookie('cv_auth_token', {
             httpOnly: true,
             secure: config.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -348,7 +348,7 @@ const checkLogin = async (req, res) => {
             ip: req.ip || req.connection.remoteAddress
         });
 
-		res.cookie('authToken', token, {
+		res.cookie('cv_auth_token', token, {
             httpOnly: config.NODE_ENV === 'production',
             secure: config.NODE_ENV === 'production', // true en producción
             sameSite: 'lax',
