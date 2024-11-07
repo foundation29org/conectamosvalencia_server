@@ -7,7 +7,7 @@ function isAuth(roles) {
     return async (req, res, next) => {
         try {
             // Obtener token de la cookie en lugar del header
-            const token = req.cookies.authToken;
+            const token = req.cookies.cv_auth_token;
             
             if (!token) {
                 logger.warn('Intento de acceso sin token', {
