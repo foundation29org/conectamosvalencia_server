@@ -98,7 +98,7 @@ app.use((req, res, next) => {
 app.use(helmet({
   hidePoweredBy: true, // Ocultar cabecera X-Powered-By
   contentSecurityPolicy: {
-      directives: {
+    directives: {
         defaultSrc: ["'self'"],
         scriptSrc: [
             "'self'",
@@ -110,7 +110,10 @@ app.use(helmet({
             "https://www.gstatic.com",
             "https://kit.fontawesome.com",
             "https://www.googletagmanager.com",
-            "https://static.hotjar.com"
+            "https://static.hotjar.com",
+            "https://script.hotjar.com",
+            "https://region1.google-analytics.com",
+            "https://maps-api-v3.googleapis.com"
         ],
         styleSrc: [
             "'self'",
@@ -125,7 +128,8 @@ app.use(helmet({
             "blob:",
             "https:",
             "https://maps.gstatic.com",
-            "https://maps.googleapis.com"
+            "https://maps.googleapis.com",
+            "https://foundation29.org"
         ],
         fontSrc: [
             "'self'",
@@ -149,7 +153,8 @@ app.use(helmet({
             "https://*.google-analytics.com",
             "https://analytics.google.com",
             "https://stats.g.doubleclick.net",
-            "https://ka-f.fontawesome.com"
+            "https://ka-f.fontawesome.com",
+            "https://region1.google-analytics.com"
         ],
         workerSrc: ["'self'", "blob:"],
         childSrc: ["blob:"],
@@ -171,7 +176,8 @@ app.use(helmet({
   xssFilter: true,
   referrerPolicy: {
       policy: 'no-referrer-when-downgrade'
-  }
+  },
+  crossOriginEmbedderPolicy: false,  // Necesario para recursos de terceros
 }));
 
 app.use(cors({
