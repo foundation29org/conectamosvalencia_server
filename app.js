@@ -136,7 +136,8 @@ app.use(helmet({
             "data:",
             "https://fonts.gstatic.com",
             "https://kit-free.fontawesome.com",
-            "https://ka-f.fontawesome.com"
+            "https://ka-f.fontawesome.com",
+            "https://script.hotjar.com"
         ],
         frameSrc: [
             "'self'",
