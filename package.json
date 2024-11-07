@@ -12,13 +12,9 @@
   "author": "LOA",
   "license": "MIT",
   "dependencies": {
-    "@azure/ai-text-analytics": "^5.1.0",
-    "@azure/storage-blob": "^12.2.0-preview.1",
     "applicationinsights": "^2.7.3",
     "async": "^2.6.0",
     "axios": "^0.27.2",
-    "azure-sb": "^0.10.6",
-    "azure-storage": "^2.10.3",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.5",

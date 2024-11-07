@@ -17,7 +17,62 @@ const config = require('./config');
 app.disable('x-powered-by');
 
 app.use(cookieParser());
+app.use(helmet({
+  contentSecurityPolicy: {
+      directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "'unsafe-eval'",
+              "https://conectamosvalencia.com",
+              "https://*.conectamosvalencia.com"
+          ],
+          styleSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              "https://conectamosvalencia.com",
+              "https://*.conectamosvalencia.com"
+          ],
+          imgSrc: [
+              "'self'",
+              "data:",
+              "blob:",
+              "https:",
+              "https://conectamosvalencia.com",
+              "https://*.conectamosvalencia.com"
+          ],
+          connectSrc: [
+              "'self'",
+              "https://conectamosvalencia.com",
+              "https://*.conectamosvalencia.com",
+              "wss://conectamosvalencia.com",
+              "wss://*.conectamosvalencia.com"
+          ],
+          fontSrc: ["'self'", "data:", "https:"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          formAction: ["'self'"],
+          upgradeInsecureRequests: []
+      }
+  },
+  crossOriginEmbedderPolicy: false,  // Añadido
+  crossOriginOpenerPolicy: false,    // Añadido
+  crossOriginResourcePolicy: false,   // Añadido
+}));
+
+// Resto de la configuración de middleware
 app.use(cors({
+  origin: config.NODE_ENV === 'production' 
+      ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com']
+      : ['http://localhost:4200'],
+  credentials: true,
+  methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Accept-Language', 'Origin', 'User-Agent'],
+  exposedHeaders: ['set-cookie']
+}));
+/*app.use(cors({
     origin: config.NODE_ENV === 'production' 
         ? ['https://conectamosvalencia.com', 'https://www.conectamosvalencia.com'] // Dominio en producción
         : ['http://localhost:4200'], // Dominio en desarrollo
@@ -80,7 +135,7 @@ app.use(helmet({
   referrerPolicy: {
       policy: 'no-referrer-when-downgrade'
   }
-}));
+}));*/
 
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
