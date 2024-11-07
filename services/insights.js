@@ -1,7 +1,7 @@
-/*const config = require('../config');
-const appInsights = require('applicationinsights');*/
+const config = require('../config');
+const appInsights = require('applicationinsights');
 
-/*const logger2 = {
+const logger = {
     info: (message, meta = {}) => {
         if (config.client_server === 'http://localhost:4200') {
             console.log('AppInsights tracking (INFO):', { message, ...meta });
@@ -60,9 +60,9 @@ const appInsights = require('applicationinsights');*/
             });
         }
     }
-};*/
+};
 
-const logger = {
+/*const logger = {
   info: (message, meta = {}) => {
       console.log('INFO:', { message, ...meta });
   },
@@ -78,6 +78,6 @@ const logger = {
   error: (message, meta = {}) => {
       console.error('ERROR:', { message, ...meta });
   }
-};
+};*/
 
 module.exports = logger;

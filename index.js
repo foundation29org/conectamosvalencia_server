@@ -8,7 +8,7 @@
 const config = require('./config')
 const mongoose = require('mongoose');
 const app = require('./app')
-/*let appInsights = require('applicationinsights');
+let appInsights = require('applicationinsights');
 
 if(config.client_server!='http://localhost:4200'){
 	appInsights.setup(config.INSIGHTS)
@@ -23,7 +23,7 @@ if(config.client_server!='http://localhost:4200'){
     .setDistributedTracingMode(appInsights.DistributedTracingModes.AI)
     .start();
 }
-*/
+
 mongoose.Promise = global.Promise
 
 app.listen(config.port, () => {
