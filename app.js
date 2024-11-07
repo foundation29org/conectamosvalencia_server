@@ -28,25 +28,6 @@ app.use(cors({
 }));
 
 app.use(helmet({
-  contentSecurityPolicy: false, // Temporalmente deshabilitado para diagnóstico
-  frameguard: {
-      action: 'DENY'
-  },
-  hidePoweredBy: true,
-  hsts: {
-      maxAge: 63072000,
-      includeSubDomains: true,
-      preload: true
-  },
-  ieNoOpen: true,
-  noSniff: true,
-  xssFilter: true,
-  referrerPolicy: {
-      policy: 'no-referrer-when-downgrade'
-  }
-}));
-
-/*app.use(helmet({
   hidePoweredBy: true, // Ocultar cabecera X-Powered-By
   contentSecurityPolicy: {
       directives: {
@@ -99,7 +80,7 @@ app.use(helmet({
   referrerPolicy: {
       policy: 'no-referrer-when-downgrade'
   }
-}));*/
+}));
 
 // Añadir manualmente algunas cabeceras adicionales de seguridad
 app.use((req, res, next) => {
