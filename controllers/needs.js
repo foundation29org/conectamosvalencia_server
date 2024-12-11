@@ -961,7 +961,7 @@ const updateStatus = async (req, res) => {
         const sanitizedStatus = String(status).trim().toLowerCase();
 
         // Validar que el estado sea válido
-        const validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+        const validStatuses = ['new','pending', 'in_progress', 'completed', 'cancelled'];
         if (!validStatuses.includes(sanitizedStatus)) {
             logger.warn('Intento de actualización con estado inválido', {
                 needId,
