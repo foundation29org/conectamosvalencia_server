@@ -41,22 +41,5 @@
   },
   "devDependencies": {
     "nodemon": "^1.12.1"
-  },
-  "apidoc": {
-    "name": "Health29",
-    "version": "1.0.0",
-    "description": "API docs",
-    "apidoc": {
-      "title": "API for Health29",
-      "url": "https://conectamosvalencia.com/api"
-    },
-    "header": {
-      "title": "Introduction",
-      "filename": "apidoc/header.md"
-    },
-    "footer": {
-      "title": "About Health29",
-      "filename": "apidoc/footer.md"
-    }
   }
 }

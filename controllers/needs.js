@@ -6,63 +6,118 @@ const config = require('../config');
 
 const createNeed = async (req, res) => {
     try {
-
         logger.info('Intento de creación de necesidad', {
             userId: req.params.userId,
             ip: req.ip || req.connection.remoteAddress,
-            type: req.body.type
         });
 
         const sanitizedData = {
-            type: String(req.body.type || '').trim().toLowerCase(),
-            needs: Array.isArray(req.body.needs) ? 
-                req.body.needs.map(need => String(need).trim().toLowerCase()) : [],
-            otherNeeds: req.body.otherNeeds ? 
-                String(req.body.otherNeeds).trim().replace(/[<>]/g, '') : undefined,
-            details: req.body.details ? 
-                String(req.body.details).trim().replace(/[<>]/g, '') : undefined,
-            location: req.body.location ? {
-                lat: Number(req.body.location.lat),
-                lng: Number(req.body.location.lng)
-            } : undefined
+            personalInfo: {
+                fullName: String(req.body.personalInfo?.fullName || '').trim(),
+                idType: String(req.body.personalInfo?.idType || '').trim(),
+                idNumber: String(req.body.personalInfo?.idNumber || '').trim(),
+                lostDocumentation: Boolean(req.body.personalInfo?.lostDocumentation),
+                birthDate: new Date(req.body.personalInfo?.birthDate),
+                gender: String(req.body.personalInfo?.gender || '').trim(),
+                language: String(req.body.personalInfo?.language || '').trim(),
+                residence: String(req.body.personalInfo?.residence || '').trim(),
+                city: String(req.body.personalInfo?.city || '').trim(),
+                householdMembers: Number(req.body.personalInfo?.householdMembers)
+            },
+            housing: {
+                items: {
+                    noHousing: Boolean(req.body.housing?.items?.noHousing),
+                    housingDeficiencies: Boolean(req.body.housing?.items?.housingDeficiencies),
+                    unsanitary: Boolean(req.body.housing?.items?.unsanitary),
+                    overcrowding: Boolean(req.body.housing?.items?.overcrowding),
+                    noBasicGoods: Boolean(req.body.housing?.items?.noBasicGoods),
+                    foodShortage: Boolean(req.body.housing?.items?.foodShortage)
+                },
+                observations: String(req.body.housing?.observations || '').trim()
+            },
+            employment: {
+                items: {
+                    allUnemployed: Boolean(req.body.employment?.items?.allUnemployed),
+                    jobLoss: Boolean(req.body.employment?.items?.jobLoss),
+                    temporaryLayoff: Boolean(req.body.employment?.items?.temporaryLayoff),
+                    precariousEmployment: Boolean(req.body.employment?.items?.precariousEmployment)
+                },
+                observations: String(req.body.employment?.observations || '').trim()
+            },
+            socialNetworks: {
+                items: {
+                    socialIsolation: Boolean(req.body.socialNetworks?.items?.socialIsolation),
+                    neighborConflicts: Boolean(req.body.socialNetworks?.items?.neighborConflicts),
+                    needsInstitutionalSupport: Boolean(req.body.socialNetworks?.items?.needsInstitutionalSupport),
+                    vulnerableMinors: Boolean(req.body.socialNetworks?.items?.vulnerableMinors)
+                },
+                observations: String(req.body.socialNetworks?.observations || '').trim()
+            },
+            publicServices: {
+                items: {
+                    noHealthCoverage: Boolean(req.body.publicServices?.items?.noHealthCoverage),
+                    discontinuedMedicalTreatment: Boolean(req.body.publicServices?.items?.discontinuedMedicalTreatment),
+                    unschooledMinors: Boolean(req.body.publicServices?.items?.unschooledMinors),
+                    dependencyWithoutAssessment: Boolean(req.body.publicServices?.items?.dependencyWithoutAssessment),
+                    mentalHealthIssues: Boolean(req.body.publicServices?.items?.mentalHealthIssues)
+                },
+                observations: String(req.body.publicServices?.observations || '').trim()
+            },
+            socialParticipation: {
+                items: {
+                    memberOfOrganizations: Boolean(req.body.socialParticipation?.items?.memberOfOrganizations),
+                    receivesSocialServices: Boolean(req.body.socialParticipation?.items?.receivesSocialServices)
+                },
+                observations: String(req.body.socialParticipation?.observations || '').trim()
+            },
+            economicCoverage: {
+                items: {
+                    noIncome: Boolean(req.body.economicCoverage?.items?.noIncome),
+                    pensionsOrBenefits: Boolean(req.body.economicCoverage?.items?.pensionsOrBenefits),
+                    receivesRviImv: Boolean(req.body.economicCoverage?.items?.receivesRviImv)
+                },
+                observations: String(req.body.economicCoverage?.observations || '').trim()
+            },
+            details: String(req.body.details || '').trim(),
+            location: {
+                lat: Number(req.body.lat),
+                lng: Number(req.body.lng)
+            }
         };
 
         // Log de datos sanitizados
         logger.info('Datos sanitizados', { sanitizedData });
 
         const userId = req.params.userId;
-
-        // Array para almacenar mensajes de error
         const errors = [];
 
-        // Validar tipo
-         // Validar tipo
-        if (!sanitizedData.type) {
-            errors.push('El tipo es requerido');
-        } else if (!['need', 'offer'].includes(sanitizedData.type)) {
-            errors.push('El tipo debe ser "need" u "offer"');
-        }
-
-        // Validar userId
+        // Validaciones básicas
         if (!userId) {
             errors.push('El ID de usuario es requerido');
         }
 
-         // Validar necesidades
-         if (!sanitizedData.needs.length && !sanitizedData.otherNeeds) {
-            errors.push('Debe especificar al menos una necesidad o completar otras necesidades');
+        if (!sanitizedData.location?.lat || !sanitizedData.location?.lng) {
+            errors.push('La ubicación es requerida');
         }
 
-        // Validar ubicación para necesidades
-        if (sanitizedData.type === 'need') {
-            if (!sanitizedData.location || !sanitizedData.location.lat || !sanitizedData.location.lng) {
-                errors.push('La ubicación es requerida para las necesidades');
+        // Validaciones de personalInfo
+        const requiredPersonalInfoFields = [
+            'fullName', 'idType', 'idNumber', 'birthDate', 
+            'gender', 'language', 'residence', 'city', 'householdMembers'
+        ];
+
+        requiredPersonalInfoFields.forEach(field => {
+            if (!sanitizedData.personalInfo[field]) {
+                errors.push(`El campo ${field} es requerido`);
             }
+        });
+
+        // Validación específica para householdMembers
+        if (sanitizedData.personalInfo.householdMembers < 1) {
+            errors.push('El número de miembros del hogar debe ser al menos 1');
         }
 
-        // Si hay errores, retornar respuesta con todos los errores
         if (errors.length > 0) {
-
             logger.warn('Validación fallida en creación de necesidad', {
                 errors,
                 userId,
@@ -76,32 +131,21 @@ const createNeed = async (req, res) => {
             });
         }
 
-        //decrypt userId
         const decryptedUserId = crypt.decrypt(userId);
-        // Crear nueva instancia del modelo
+        
         const newNeed = new Need({
-            type: sanitizedData.type,
-            needs: sanitizedData.needs,
-            otherNeeds: sanitizedData.otherNeeds,
-            details: sanitizedData.details,
-            location: sanitizedData.location,
-            timestamp: new Date(),
+            ...sanitizedData,
+            userId: decryptedUserId,
+            timestamp: new Date()
+        });
+
+        await newNeed.save();
+
+        logger.info('Necesidad creada exitosamente', {
+            needId: newNeed._id,
             userId: decryptedUserId
         });
 
-
-        // Guardar en la base de datos
-        await newNeed.save();
-
-        // Log de éxito
-        logger.info('Necesidad creada exitosamente', {
-            needId: newNeed._id,
-            userId: decryptedUserId,
-            type: sanitizedData.type,
-            needs: sanitizedData.needs
-        });
-
-        // Responder con éxito
         res.status(201).json({
             success: true,
             data: newNeed,
@@ -109,13 +153,13 @@ const createNeed = async (req, res) => {
         });
 
     } catch (error) {
-        // Log detallado del error
         logger.error('Error al crear necesidad', {
             error,
             userId: req.params.userId,
             body: req.body,
             ip: req.ip || req.connection.remoteAddress
         });
+        
         res.status(500).json({
             success: false,
             message: 'Error al procesar la solicitud',
@@ -124,7 +168,6 @@ const createNeed = async (req, res) => {
     }
 };
 
-//crea esta funcion api.put('/needs/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.updateNeed)
 const updateNeed = async (req, res) => {
     try {
         const needId = req.params.needId;
@@ -134,8 +177,7 @@ const updateNeed = async (req, res) => {
         logger.info('Intento de actualización de necesidad', {
             needId,
             userId,
-            ip: req.ip || req.connection.remoteAddress,
-            body: req.body
+            ip: req.ip || req.connection.remoteAddress
         });
 
         const decryptedUserId = crypt.decrypt(userId);
@@ -168,20 +210,80 @@ const updateNeed = async (req, res) => {
             });
         }
 
-        // Validar los datos de actualización
-        //const { type, needs, otherNeeds, details, location } = req.body;
+        // Sanitizar los datos de actualización
         const sanitizedData = {
-            type: req.body.type ? String(req.body.type).trim().toLowerCase() : undefined,
-            needs: Array.isArray(req.body.needs) ? 
-                req.body.needs.map(need => String(need).trim().toLowerCase()) : undefined,
-            otherNeeds: req.body.otherNeeds ? 
-                String(req.body.otherNeeds).trim().replace(/[<>]/g, '') : undefined,
-            details: req.body.details ? 
-                String(req.body.details).trim().replace(/[<>]/g, '') : undefined,
-            location: req.body.location ? {
-                lat: Number(req.body.location.lat),
-                lng: Number(req.body.location.lng)
-            } : undefined
+            personalInfo: req.body.personalInfo ? {
+                fullName: String(req.body.personalInfo.fullName || '').trim(),
+                idType: String(req.body.personalInfo.idType || '').trim(),
+                idNumber: String(req.body.personalInfo.idNumber || '').trim(),
+                lostDocumentation: Boolean(req.body.personalInfo.lostDocumentation),
+                birthDate: req.body.personalInfo.birthDate ? new Date(req.body.personalInfo.birthDate) : undefined,
+                gender: String(req.body.personalInfo.gender || '').trim(),
+                language: String(req.body.personalInfo.language || '').trim(),
+                residence: String(req.body.personalInfo.residence || '').trim(),
+                city: String(req.body.personalInfo.city || '').trim(),
+                householdMembers: Number(req.body.personalInfo.householdMembers)
+            } : undefined,
+            housing: req.body.housing ? {
+                items: {
+                    noHousing: Boolean(req.body.housing.items?.noHousing),
+                    housingDeficiencies: Boolean(req.body.housing.items?.housingDeficiencies),
+                    unsanitary: Boolean(req.body.housing.items?.unsanitary),
+                    overcrowding: Boolean(req.body.housing.items?.overcrowding),
+                    noBasicGoods: Boolean(req.body.housing.items?.noBasicGoods),
+                    foodShortage: Boolean(req.body.housing.items?.foodShortage)
+                },
+                observations: String(req.body.housing.observations || '').trim()
+            } : undefined,
+            employment: req.body.employment ? {
+                items: {
+                    allUnemployed: Boolean(req.body.employment.items?.allUnemployed),
+                    jobLoss: Boolean(req.body.employment.items?.jobLoss),
+                    temporaryLayoff: Boolean(req.body.employment.items?.temporaryLayoff),
+                    precariousEmployment: Boolean(req.body.employment.items?.precariousEmployment)
+                },
+                observations: String(req.body.employment.observations || '').trim()
+            } : undefined,
+            socialNetworks: req.body.socialNetworks ? {
+                items: {
+                    socialIsolation: Boolean(req.body.socialNetworks.items?.socialIsolation),
+                    neighborConflicts: Boolean(req.body.socialNetworks.items?.neighborConflicts),
+                    needsInstitutionalSupport: Boolean(req.body.socialNetworks.items?.needsInstitutionalSupport),
+                    vulnerableMinors: Boolean(req.body.socialNetworks.items?.vulnerableMinors)
+                },
+                observations: String(req.body.socialNetworks.observations || '').trim()
+            } : undefined,
+            publicServices: req.body.publicServices ? {
+                items: {
+                    noHealthCoverage: Boolean(req.body.publicServices.items?.noHealthCoverage),
+                    discontinuedMedicalTreatment: Boolean(req.body.publicServices.items?.discontinuedMedicalTreatment),
+                    unschooledMinors: Boolean(req.body.publicServices.items?.unschooledMinors),
+                    dependencyWithoutAssessment: Boolean(req.body.publicServices.items?.dependencyWithoutAssessment),
+                    mentalHealthIssues: Boolean(req.body.publicServices.items?.mentalHealthIssues)
+                },
+                observations: String(req.body.publicServices.observations || '').trim()
+            } : undefined,
+            socialParticipation: req.body.socialParticipation ? {
+                items: {
+                    memberOfOrganizations: Boolean(req.body.socialParticipation.items?.memberOfOrganizations),
+                    receivesSocialServices: Boolean(req.body.socialParticipation.items?.receivesSocialServices)
+                },
+                observations: String(req.body.socialParticipation.observations || '').trim()
+            } : undefined,
+            economicCoverage: req.body.economicCoverage ? {
+                items: {
+                    noIncome: Boolean(req.body.economicCoverage.items?.noIncome),
+                    pensionsOrBenefits: Boolean(req.body.economicCoverage.items?.pensionsOrBenefits),
+                    receivesRviImv: Boolean(req.body.economicCoverage.items?.receivesRviImv)
+                },
+                observations: String(req.body.economicCoverage.observations || '').trim()
+            } : undefined,
+            details: req.body.details ? String(req.body.details).trim() : undefined,
+            location: (req.body.lat || req.body.lng) ? {
+                lat: Number(req.body.lat),
+                lng: Number(req.body.lng)
+            } : undefined,
+            status: req.body.status ? String(req.body.status).trim() : undefined
         };
 
         // Log de datos sanitizados
@@ -192,27 +294,37 @@ const updateNeed = async (req, res) => {
 
         const errors = [];
 
-         // Validar tipo
-        if (sanitizedData.type && !['need', 'offer'].includes(sanitizedData.type)) {
-            errors.push('El tipo debe ser "need" u "offer"');
-        }
+        // Validaciones específicas si se actualiza personalInfo
+        if (sanitizedData.personalInfo) {
+            const requiredPersonalInfoFields = [
+                'fullName', 'idType', 'idNumber', 'birthDate', 
+                'gender', 'language', 'residence', 'city', 'householdMembers'
+            ];
 
+            requiredPersonalInfoFields.forEach(field => {
+                if (!sanitizedData.personalInfo[field]) {
+                    errors.push(`El campo ${field} es requerido`);
+                }
+            });
 
-        // Validar necesidades
-        if (sanitizedData.needs === undefined && sanitizedData.otherNeeds === undefined) {
-            errors.push('Debe especificar al menos una necesidad o completar otras necesidades');
-        }
-
-        // Validar ubicación para necesidades
-        if (sanitizedData.type === 'need') {
-            if (!sanitizedData.location || !sanitizedData.location.lat || !sanitizedData.location.lng) {
-                errors.push('La ubicación es requerida para las necesidades');
+            if (sanitizedData.personalInfo.householdMembers < 1) {
+                errors.push('El número de miembros del hogar debe ser al menos 1');
             }
         }
 
-        // Si hay errores de validación, retornar error
-        if (errors.length > 0) {
+        // Validar ubicación si se proporciona
+        if (sanitizedData.location && (!sanitizedData.location.lat || !sanitizedData.location.lng)) {
+            errors.push('Si se proporciona ubicación, tanto lat como lng son requeridos');
+        }
 
+        if (sanitizedData.status) {
+            const validStatuses = ['new', 'pending', 'in_progress', 'completed', 'cancelled'];
+            if (!validStatuses.includes(sanitizedData.status)) {
+                errors.push(`Estado inválido. Los estados válidos son: ${validStatuses.join(', ')}`);
+            }
+        }
+
+        if (errors.length > 0) {
             logger.warn('Validación fallida en actualización de necesidad', {
                 errors,
                 needId,
@@ -227,8 +339,8 @@ const updateNeed = async (req, res) => {
             });
         }
 
-         // Eliminar propiedades undefined antes de actualizar
-         Object.keys(sanitizedData).forEach(key => 
+        // Eliminar propiedades undefined antes de actualizar
+        Object.keys(sanitizedData).forEach(key => 
             sanitizedData[key] === undefined && delete sanitizedData[key]
         );
 
@@ -251,13 +363,14 @@ const updateNeed = async (req, res) => {
             userId: decryptedUserId,
             updates: sanitizedData
         });
+
         res.status(200).json({
             success: true,
             data: updatedNeed,
             message: 'Necesidad actualizada correctamente'
         });
+
     } catch (error) {
-        // Log detallado del error
         logger.error('Error al actualizar necesidad', {
             error,
             needId: req.params.needId,
@@ -265,13 +378,14 @@ const updateNeed = async (req, res) => {
             body: req.body,
             ip: req.ip || req.connection.remoteAddress
         });
+        
         res.status(500).json({
             success: false,
             message: 'Error al actualizar la necesidad',
             error: error.message
         });
     }
-}
+};
 
 const getAllNeedsComplete = async (req, res) => {
     try {
@@ -339,7 +453,6 @@ const getAllNeedsComplete = async (req, res) => {
     }
 };
 
-//crea esta funcion api.get('/needsuser/complete/:userId', corsWithOptions, auth(roles.AllLessResearcher), needsCtrl.getAllNeedsCompleteForUser)
 const getAllNeedsCompleteForUser = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -436,6 +549,7 @@ const getAllNeedsForHeatmap = async (req, res) => {
         // Sanitizar parámetros de consulta
         const sanitizedQuery = {
             activated: true,
+            status: { $ne: 'helped' }
             // Aquí podrían ir más filtros si se necesitan en el futuro
         };
 
@@ -463,9 +577,6 @@ const getAllNeedsForHeatmap = async (req, res) => {
         
         // Sanitizar los datos antes de enviarlos
         const sanitizedNeeds = needs.map(need => ({
-            type: String(need.type || '').trim().toLowerCase(),
-            needs: Array.isArray(need.needs) ? 
-                need.needs.map(n => String(n).trim().toLowerCase()) : [],
             location: need.location ? {
                 lat: Number(need.location.lat),
                 lng: Number(need.location.lng)
@@ -474,15 +585,19 @@ const getAllNeedsForHeatmap = async (req, res) => {
             _id: need._id,
             status: String(need.status || '').trim(),
             // Ocultar datos sensibles
-            otherNeeds: need.otherNeeds ? '[Contenido privado]' : '',
-            details: need.details ? '[Contenido privado]' : ''
+            details: need.details ? '[Contenido privado]' : '',
+            housing: need.housing?.items || {},
+            employment: need.employment?.items || {},
+            socialNetworks: need.socialNetworks?.items || {},
+            publicServices: need.publicServices?.items || {},
+            socialParticipation: need.socialParticipation?.items || {},
+            economicCoverage: need.economicCoverage?.items || {}
         }));
 
         // Log de éxito con métricas
         logger.info('Datos del heatmap procesados', {
             totalNeeds: needs.length,
             needsWithLocation: sanitizedNeeds.filter(n => n.location).length,
-            types: [...new Set(sanitizedNeeds.map(n => n.type))],
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -585,7 +700,6 @@ const deleteNeed = async (req, res) => {
         logger.info('Necesidad eliminada exitosamente', {
             needId,
             userId: 'ENCRYPTED', // No logear el userId descifrado
-            type: deletedNeed.type,
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -654,7 +768,6 @@ const superadminDeleteNeed = async (req, res) => {
 
         // Guardar información relevante antes de eliminar
         const needInfo = {
-            type: need.type,
             userId: 'ENCRYPTED', // No logear el userId real
             createdAt: need.timestamp
         };
@@ -695,7 +808,6 @@ const superadminDeleteNeed = async (req, res) => {
     }
 };
 
-//crea esta funcion api.get('/needs/phone/:needId', corsWithOptions, auth(roles.AdminSuperAdmin), needsCtrl.getAllNeedsForPhone)
 const getPhone = async (req, res) => {
     try {
         const adminId = req.user && req.user.id ? req.user.id : 'unknown';

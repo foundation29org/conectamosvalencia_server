@@ -3,63 +3,77 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const { conndbaccounts } = require('../db_connect')
 
-const validNeedTypes = [
-  'all',
-  'transport_logistics',
-  'humanitarian_aid',
-  'professional_services',
-  'construction_repair',
-  'technical_services',
-  'volunteering',
-  'financial_support',
-  'equipment_supplies',
-  'health_services',
-  'storage',
-  'vehicles',
-  'animal_resources',
-  'education_training',
-  'communication_technology',
-  'temporary_infrastructure',
-  'children_families',
-  'disability_support',
-  'psychosocial_support',
-  'energy_supply',
-  'environmental_recovery',
-  'other'
-];
-
 const needSchema = new Schema({
-  type: {
-    type: String,
-    required: true
+  personalInfo: {
+    fullName: { type: String, required: true },
+    idType: { type: String, required: true },
+    idNumber: { type: String, required: true },
+    lostDocumentation: { type: Boolean, default: false },
+    birthDate: { type: Date, required: true },
+    gender: { type: String, required: true },
+    language: { type: String, required: true },
+    residence: { type: String, required: true },
+    city: { type: String, required: true },
+    householdMembers: { type: Number, required: true, min: 1 }
   },
-  needs: {
-    type: [String],
-    required: false,
-    validate: {
-      validator: function(array) {
-          return array.every(item => validNeedTypes.includes(item));
-      },
-      message: 'Uno o más tipos de necesidad no son válidos'
-    }
-  },
-  otherNeeds: {
-    type: String,
-    required: false
-  },
-  details: {
-    type: String,
-    required: false
-  },
-  location: {
-    lat: {
-      type: Number,
-      required: false
+  housing: {
+    items: {
+      noHousing: { type: Boolean, default: false },
+      housingDeficiencies: { type: Boolean, default: false },
+      unsanitary: { type: Boolean, default: false },
+      overcrowding: { type: Boolean, default: false },
+      noBasicGoods: { type: Boolean, default: false },
+      foodShortage: { type: Boolean, default: false }
     },
-    lng: {
-      type: Number,
-      required: false
-    }
+    observations: { type: String }
+  },
+  employment: {
+    items: {
+      allUnemployed: { type: Boolean, default: false },
+      jobLoss: { type: Boolean, default: false },
+      temporaryLayoff: { type: Boolean, default: false },
+      precariousEmployment: { type: Boolean, default: false }
+    },
+    observations: { type: String }
+  },
+  socialNetworks: {
+    items: {
+      socialIsolation: { type: Boolean, default: false },
+      neighborConflicts: { type: Boolean, default: false },
+      needsInstitutionalSupport: { type: Boolean, default: false },
+      vulnerableMinors: { type: Boolean, default: false }
+    },
+    observations: { type: String }
+  },
+  publicServices: {
+    items: {
+      noHealthCoverage: { type: Boolean, default: false },
+      discontinuedMedicalTreatment: { type: Boolean, default: false },
+      unschooledMinors: { type: Boolean, default: false },
+      dependencyWithoutAssessment: { type: Boolean, default: false },
+      mentalHealthIssues: { type: Boolean, default: false }
+    },
+    observations: { type: String }
+  },
+  socialParticipation: {
+    items: {
+      memberOfOrganizations: { type: Boolean, default: false },
+      receivesSocialServices: { type: Boolean, default: false }
+    },
+    observations: { type: String }
+  },
+  economicCoverage: {
+    items: {
+      noIncome: { type: Boolean, default: false },
+      pensionsOrBenefits: { type: Boolean, default: false },
+      receivesRviImv: { type: Boolean, default: false }
+    },
+    observations: { type: String }
+  },
+  details: { type: String },
+  location: {
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true }
   },
   status: {
     type: String,
