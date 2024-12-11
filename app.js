@@ -227,8 +227,6 @@ if (config.NODE_ENV !== 'production') {
 // use the forward slash with the module api api folder created routes
 app.use('/api',api)
 
-app.use('/apidoc',express.static('apidoc', {'index': ['index.html']}))
-
 //ruta angular, poner carpeta dist publica
 app.use(express.static(path.join(__dirname, 'dist')));
 // Send all other requests to the Angular app
