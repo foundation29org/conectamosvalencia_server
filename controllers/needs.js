@@ -4,6 +4,13 @@ const User = require('../models/user');
 const logger = require('../services/insights');
 const config = require('../config');
 
+
+const isValidPhone = (phone) => {
+    // Eliminar espacios y guiones para la validación
+    const cleanPhone = phone.replace(/[\s-]/g, '');
+    return /^[+]?[0-9]{9,15}$/.test(cleanPhone);
+};
+
 const createNeed = async (req, res) => {
     try {
         logger.info('Intento de creación de necesidad', {
@@ -22,7 +29,8 @@ const createNeed = async (req, res) => {
                 language: String(req.body.personalInfo?.language || '').trim(),
                 residence: String(req.body.personalInfo?.residence || '').trim(),
                 city: String(req.body.personalInfo?.city || '').trim(),
-                householdMembers: Number(req.body.personalInfo?.householdMembers)
+                householdMembers: Number(req.body.personalInfo?.householdMembers),
+                phone: String(req.body.personalInfo?.phone || '').replace(/[\s-]/g, '').trim()
             },
             housing: {
                 items: {
@@ -103,7 +111,7 @@ const createNeed = async (req, res) => {
         // Validaciones de personalInfo
         const requiredPersonalInfoFields = [
             'fullName', 'idType', 'idNumber', 'birthDate', 
-            'gender', 'language', 'residence', 'city', 'householdMembers'
+            'gender', 'language', 'residence', 'city', 'householdMembers', 'phone'
         ];
 
         requiredPersonalInfoFields.forEach(field => {
@@ -115,6 +123,11 @@ const createNeed = async (req, res) => {
         // Validación específica para householdMembers
         if (sanitizedData.personalInfo.householdMembers < 1) {
             errors.push('El número de miembros del hogar debe ser al menos 1');
+        }
+
+         // Validación específica para el teléfono
+         if (!isValidPhone(sanitizedData.personalInfo.phone)) {
+            errors.push('El formato del teléfono no es válido. Debe contener entre 9 y 15 dígitos y puede incluir código de país');
         }
 
         if (errors.length > 0) {
@@ -133,9 +146,23 @@ const createNeed = async (req, res) => {
 
         const decryptedUserId = crypt.decrypt(userId);
         
+         // Obtener la institución del usuario
+         const user = await User.findById(decryptedUserId);
+         if (!user) {
+             logger.warn('Usuario no encontrado al crear necesidad', {
+                 userId: decryptedUserId,
+                 ip: req.ip || req.connection.remoteAddress
+             });
+             return res.status(404).json({
+                 success: false,
+                 message: 'Usuario no encontrado'
+             });
+         }
+
         const newNeed = new Need({
             ...sanitizedData,
             userId: decryptedUserId,
+            institution: user.institution,
             timestamp: new Date()
         });
 
@@ -222,7 +249,8 @@ const updateNeed = async (req, res) => {
                 language: String(req.body.personalInfo.language || '').trim(),
                 residence: String(req.body.personalInfo.residence || '').trim(),
                 city: String(req.body.personalInfo.city || '').trim(),
-                householdMembers: Number(req.body.personalInfo.householdMembers)
+                householdMembers: Number(req.body.personalInfo.householdMembers),
+                phone: String(req.body.personalInfo.phone || '').replace(/[\s-]/g, '').trim()
             } : undefined,
             housing: req.body.housing ? {
                 items: {
@@ -298,7 +326,7 @@ const updateNeed = async (req, res) => {
         if (sanitizedData.personalInfo) {
             const requiredPersonalInfoFields = [
                 'fullName', 'idType', 'idNumber', 'birthDate', 
-                'gender', 'language', 'residence', 'city', 'householdMembers'
+                'gender', 'language', 'residence', 'city', 'householdMembers', 'phone'
             ];
 
             requiredPersonalInfoFields.forEach(field => {
@@ -309,6 +337,10 @@ const updateNeed = async (req, res) => {
 
             if (sanitizedData.personalInfo.householdMembers < 1) {
                 errors.push('El número de miembros del hogar debe ser al menos 1');
+            }
+            if (sanitizedData.personalInfo.phone && 
+                !isValidPhone(sanitizedData.personalInfo.phone)) {
+                errors.push('El formato del teléfono no es válido. Debe contener entre 9 y 15 dígitos y puede incluir código de país');
             }
         }
 
@@ -389,23 +421,42 @@ const updateNeed = async (req, res) => {
 
 const getAllNeedsComplete = async (req, res) => {
     try {
+        console.log('getAllNeedsComplete')
+        const userId = req.user;
+        const userEncrypted = crypt.encrypt(userId)
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
          // Log de intento de obtención
          logger.info('Intento de obtención de todas las necesidades', {
             ip: req.ip || req.connection.remoteAddress,
             query: req.query, // Por si añadimos filtros en el futuro
-            userId: req.params.userId
+            userId: userEncrypted
         });
         // Sanitizar parámetros de consulta si los hubiera
         const sanitizedQuery = {
             activated: true,
             // Aquí podrían ir más filtros sanitizados si se añaden en el futuro
         };
+        // Si es admin (no superadmin), filtrar por institución
+        if (user.role === 'Admin') {
+            sanitizedQuery.institution = user.institution;
+        }
 
         // Log de parámetros sanitizados
         logger.info('Parámetros de búsqueda sanitizados', {
             sanitizedQuery,
             ip: req.ip || req.connection.remoteAddress
         });
+
+       
+
         // Puedes añadir .sort({ timestamp: -1 }) si quieres ordenar por fecha descendente
         // Obtener todas las necesidades con los filtros
         const needs = await Need.find(sanitizedQuery);
@@ -540,32 +591,47 @@ const getAllNeedsCompleteForUser = async (req, res) => {
 
 const getAllNeedsForHeatmap = async (req, res) => {
     try {
+        const userId = req.user;
+        const userEncrypted = crypt.encrypt(userId)
+        // Obtener el usuario y su rol
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        // Construir el query base
+        let query = { activated: true, status: { $ne: 'helped' } };
+
+        // Si es admin (no superadmin), filtrar por institución
+        if (user.role === 'Admin') {
+            query.institution = user.institution;
+        }
+
         // Log de intento de obtención
         logger.info('Intento de obtención de necesidades para heatmap', {
             ip: req.ip || req.connection.remoteAddress,
-            query: req.query
+            query: req.query,
+            userId: userEncrypted,
+            institution: user.institution,
+            role: user.role
         });
-
-        // Sanitizar parámetros de consulta
-        const sanitizedQuery = {
-            activated: true,
-            status: { $ne: 'helped' }
-            // Aquí podrían ir más filtros si se necesitan en el futuro
-        };
 
         // Log de parámetros de búsqueda
         logger.info('Parámetros de búsqueda sanitizados para heatmap', {
-            sanitizedQuery,
+            query,
             ip: req.ip || req.connection.remoteAddress
         });
 
         // Obtener necesidades
-        const needs = await Need.find(sanitizedQuery);
+        const needs = await Need.find(query);
 
         // Validar el resultado
         if (!needs || needs.length === 0) {
             logger.info('No se encontraron necesidades para el heatmap', {
-                sanitizedQuery,
+                query,
                 ip: req.ip || req.connection.remoteAddress
             });
         } else {
