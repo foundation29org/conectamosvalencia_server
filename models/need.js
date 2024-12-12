@@ -4,6 +4,10 @@ const Schema = mongoose.Schema;
 const { conndbaccounts } = require('../db_connect')
 
 const needSchema = new Schema({
+  institution: {
+    type: String,
+    required: true
+  },
   personalInfo: {
     fullName: { type: String, required: true },
     idType: { type: String, required: true },
@@ -14,7 +18,8 @@ const needSchema = new Schema({
     language: { type: String, required: true },
     residence: { type: String, required: true },
     city: { type: String, required: true },
-    householdMembers: { type: Number, required: true, min: 1 }
+    householdMembers: { type: Number, required: true, min: 1 },
+    phone: { type: String, required: true, match: /^[+]?[0-9]{9,15}$/ }
   },
   housing: {
     items: {

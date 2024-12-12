@@ -58,7 +58,7 @@ const getInfoUser = async () => {
 
         const users = await User.find(
             { role: { $in: ['User', 'Admin'] } }, 
-            'userName position institution phone confirmed email role lastLogin'
+            'userName institution phone confirmed email role lastLogin'
         );
         
         if (!users || users.length === 0) {
@@ -77,7 +77,6 @@ const getInfoUser = async () => {
                 userId: crypt.encrypt(user._id.toString()),
                 userName: String(user.userName || '').trim(),
                 email: String(user.email || '').toLowerCase().trim(),
-                position: String(user.position || '').trim(),
                 institution: String(user.institution || '').trim(),
                 phone: String(user.phone || '').trim(),
                 confirmed: Boolean(user.confirmed),

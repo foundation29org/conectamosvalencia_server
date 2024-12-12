@@ -687,13 +687,12 @@ async function signUp(req, res) {
         const sanitizedData = {
             email: String(req.body.email || '').toLowerCase().trim(),
             userName: String(req.body.userName || '').trim(),
-            position: String(req.body.position || '').trim(),
             institution: String(req.body.institution || '').trim(),
             phone: String(req.body.phone || '').trim().replace(/[^\d+]/g, '') // Solo permite números y '+'
         };
 
         // Validar campos requeridos
-        const requiredFields = ['email', 'userName', 'position', 'institution', 'phone'];
+        const requiredFields = ['email', 'userName', 'institution', 'phone'];
         const missingFields = requiredFields.filter(field => !sanitizedData[field]);
 
         if (missingFields.length > 0) {
