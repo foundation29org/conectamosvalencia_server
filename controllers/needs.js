@@ -750,7 +750,7 @@ const deleteNeed = async (req, res) => {
             logger.warn('Intento de eliminación sin permisos', {
                 needId,
                 userId,
-                needUserId:  crypt.encrypt(need.userId),
+                needUserId:  crypt.encrypt(need.userId.toString()),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(403).json({
@@ -834,7 +834,7 @@ const superadminDeleteNeed = async (req, res) => {
 
         // Guardar información relevante antes de eliminar
         const needInfo = {
-            userId: crypt.encrypt(need.userId),
+            userId: crypt.encrypt(need.userId.toString()),
             createdAt: need.timestamp
         };
 
@@ -924,7 +924,7 @@ const getPhone = async (req, res) => {
         if (!user) {
             logger.warn('Usuario no encontrado para necesidad', {
                 needId,
-                userId: crypt.encrypt(need.userId),
+                userId: crypt.encrypt(need.userId.toString()),
                 requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
@@ -938,7 +938,7 @@ const getPhone = async (req, res) => {
         if (!user.phone) {
             logger.info('Usuario sin teléfono registrado', {
                 needId,
-                userId: crypt.encrypt(user.id),
+                userId: crypt.encrypt(user.id.toString()),
                 requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });

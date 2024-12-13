@@ -144,14 +144,14 @@ const login = async (req, res) => {
                 try {
                     await serviceEmail.sendEmailLogin(userUpdated.email, userUpdated.confirmationCode);
                     logger.info('Email de login enviado exitosamente', {
-                        userId: crypt.encrypt(user._id),
+                        userId: crypt.encrypt(user._id.toString()),
                         email: '***@' + sanitizedEmail.split('@')[1],
                         ip: req.ip || req.connection.remoteAddress
                     });
                 } catch (emailError) {
                     logger.error('Error enviando email de login', {
                         error: emailError,
-                        userId: crypt.encrypt(user._id),
+                        userId: crypt.encrypt(user._id.toString()),
                         email: '***@' + sanitizedEmail.split('@')[1],
                         ip: req.ip || req.connection.remoteAddress
                     });
@@ -324,7 +324,7 @@ const checkLogin = async (req, res) => {
 
         if (limitTime.getTime() >= user.dateTimeLogin.getTime()) {
             logger.warn('Verificación de login fallida - Código expirado', {
-                userId: crypt.encrypt(user._id),
+                userId: crypt.encrypt(user._id.toString()),
                 email: '***@' + sanitizedData.email.split('@')[1],
                 loginTime: user.dateTimeLogin,
                 limitTime,
@@ -343,7 +343,7 @@ const checkLogin = async (req, res) => {
        
         // Log de éxito
         logger.info('Login verificado exitosamente', {
-            userId: crypt.encrypt(user._id),
+            userId: crypt.encrypt(user._id.toString()),
             email: '***@' + sanitizedData.email.split('@')[1],
             ip: req.ip || req.connection.remoteAddress
         });
