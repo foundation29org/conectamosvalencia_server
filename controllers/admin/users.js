@@ -87,7 +87,7 @@ const getInfoUser = async () => {
             // Validar email
             if (sanitizedUser.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedUser.email)) {
                 logger.warn('Email inválido encontrado', {
-                    userId: crypt.encrypt(user._id),
+                    userId: crypt.encrypt(user._id.toString()),
                     email: '***@invalid'
                 });
             }
@@ -95,7 +95,7 @@ const getInfoUser = async () => {
             // Validar teléfono
             if (sanitizedUser.phone && !/^\+?[\d\s-]{8,}$/.test(sanitizedUser.phone)) {
                 logger.warn('Teléfono inválido encontrado', {
-                    userId: crypt.encrypt(user._id),
+                    userId: crypt.encrypt(user._id.toString()),
                 });
             }
 
