@@ -13,7 +13,7 @@ const getAllUsers = async (req, res) => {
         const adminId = req.user && req.user.id ? req.user.id : 'unknown';
         // Log del intento de obtención de usuarios
         logger.info('Intento de obtención de todos los usuarios', {
-            adminId: adminId,
+            adminId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress,
             query: req.query
         });
@@ -23,7 +23,7 @@ const getAllUsers = async (req, res) => {
 
         // Log del resultado
         logger.info('Usuarios recuperados exitosamente', {
-            adminId: adminId,
+            adminId: crypt.encrypt(adminId),
             count: users.length,
             ip: req.ip || req.connection.remoteAddress
         });
@@ -37,7 +37,7 @@ const getAllUsers = async (req, res) => {
         const adminId = req.user && req.user.id ? req.user.id : 'unknown';
         logger.error('Error obteniendo usuarios', {
             error,
-            adminId: adminId,
+            adminId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -87,7 +87,7 @@ const getInfoUser = async () => {
             // Validar email
             if (sanitizedUser.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sanitizedUser.email)) {
                 logger.warn('Email inválido encontrado', {
-                    userId: 'ENCRYPTED',
+                    userId: crypt.encrypt(user._id),
                     email: '***@invalid'
                 });
             }
@@ -95,7 +95,7 @@ const getInfoUser = async () => {
             // Validar teléfono
             if (sanitizedUser.phone && !/^\+?[\d\s-]{8,}$/.test(sanitizedUser.phone)) {
                 logger.warn('Teléfono inválido encontrado', {
-                    userId: 'ENCRYPTED'
+                    userId: crypt.encrypt(user._id),
                 });
             }
 

@@ -150,7 +150,7 @@ const createNeed = async (req, res) => {
          const user = await User.findById(decryptedUserId);
          if (!user) {
              logger.warn('Usuario no encontrado al crear necesidad', {
-                 userId: decryptedUserId,
+                 userId: userId,
                  ip: req.ip || req.connection.remoteAddress
              });
              return res.status(404).json({
@@ -170,7 +170,7 @@ const createNeed = async (req, res) => {
 
         logger.info('Necesidad creada exitosamente', {
             needId: newNeed._id,
-            userId: decryptedUserId
+            userId: userId
         });
 
         res.status(201).json({
@@ -392,7 +392,7 @@ const updateNeed = async (req, res) => {
         // Log de éxito
         logger.info('Necesidad actualizada exitosamente', {
             needId,
-            userId: decryptedUserId,
+            userId: userId,
             updates: sanitizedData
         });
 
@@ -537,7 +537,7 @@ const getAllNeedsCompleteForUser = async (req, res) => {
 
         // Log de parámetros sanitizados
         logger.info('Parámetros de búsqueda sanitizados', {
-            sanitizedQuery: { ...sanitizedQuery, userId: 'ENCRYPTED' }, // No logear el userId descifrado
+            sanitizedQuery: { ...sanitizedQuery, userId: userId },
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -547,12 +547,12 @@ const getAllNeedsCompleteForUser = async (req, res) => {
         // Validar el resultado
         if (!needs || needs.length === 0) {
             logger.info('No se encontraron necesidades para el usuario', {
-                userId: 'ENCRYPTED', // No logear el userId descifrado
+                userId: userId,
                 ip: req.ip || req.connection.remoteAddress
             });
         } else {
             logger.info('Necesidades de usuario recuperadas exitosamente', {
-                userId: 'ENCRYPTED', // No logear el userId descifrado
+                userId: userId, 
                 count: needs.length,
                 ip: req.ip || req.connection.remoteAddress
             });
@@ -561,7 +561,7 @@ const getAllNeedsCompleteForUser = async (req, res) => {
         // Sanitizar datos sensibles antes de enviar
         const sanitizedNeeds = needs.map(need => ({
             ...need.toObject(),
-            userId: userId // Devolver el userId encriptado
+            userId: userId
         }));
 
         res.status(200).json({
@@ -750,7 +750,7 @@ const deleteNeed = async (req, res) => {
             logger.warn('Intento de eliminación sin permisos', {
                 needId,
                 userId,
-                needUserId: 'ENCRYPTED', // No logear el userId real
+                needUserId:  crypt.encrypt(need.userId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(403).json({
@@ -765,7 +765,7 @@ const deleteNeed = async (req, res) => {
         // Log de éxito
         logger.info('Necesidad eliminada exitosamente', {
             needId,
-            userId: 'ENCRYPTED', // No logear el userId descifrado
+            userId: userId,
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -779,7 +779,7 @@ const deleteNeed = async (req, res) => {
         logger.error('Error al eliminar necesidad', {
             error,
             needId: req.params.needId,
-            userId: req.params.userId, // Usar el userId encriptado
+            userId: req.params.userId,
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -800,15 +800,15 @@ const superadminDeleteNeed = async (req, res) => {
 
         // Log del intento de eliminación por superadmin
         logger.info('Intento de eliminación por superadmin', {
-            needId,
-            adminId,
+            needId: needId,
+            encryptedAdminId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress
         });
 
         // Validar needId
         if (!needId) {
             logger.warn('Intento de eliminación superadmin sin needId', {
-                adminId,
+                adminId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(400).json({
@@ -823,7 +823,7 @@ const superadminDeleteNeed = async (req, res) => {
         if (!need) {
             logger.warn('Intento de eliminación superadmin de necesidad inexistente', {
                 needId,
-                adminId,
+                adminId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -834,7 +834,7 @@ const superadminDeleteNeed = async (req, res) => {
 
         // Guardar información relevante antes de eliminar
         const needInfo = {
-            userId: 'ENCRYPTED', // No logear el userId real
+            userId: crypt.encrypt(need.userId),
             createdAt: need.timestamp
         };
 
@@ -843,8 +843,8 @@ const superadminDeleteNeed = async (req, res) => {
 
         // Log de éxito
         logger.info('Necesidad eliminada exitosamente por superadmin', {
-            needId,
-            adminId,
+            needId: needId,
+            adminId: crypt.encrypt(adminId),
             needInfo,
             ip: req.ip || req.connection.remoteAddress
         });
@@ -881,15 +881,15 @@ const getPhone = async (req, res) => {
 
         // Log del intento de obtención de teléfono
         logger.info('Intento de obtención de teléfono', {
-            needId,
-            requestingUserId: adminId, // Usuario que solicita (admin/superadmin)
+            needId: needId,
+            requestingUserId: crypt.encrypt(adminId), // Usuario que solicita (admin/superadmin)
             ip: req.ip || req.connection.remoteAddress
         });
 
         // Validar needId
         if (!needId) {
             logger.warn('Intento de obtención de teléfono sin needId', {
-                requestingUserId: adminId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(400).json({
@@ -907,8 +907,8 @@ const getPhone = async (req, res) => {
         // Verificar si la necesidad existe
         if (!need) {
             logger.warn('Intento de obtención de teléfono de necesidad inexistente', {
-                needId,
-                requestingUserId: adminId,
+                needId: needId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -924,8 +924,8 @@ const getPhone = async (req, res) => {
         if (!user) {
             logger.warn('Usuario no encontrado para necesidad', {
                 needId,
-                userId: 'ENCRYPTED',
-                requestingUserId: adminId,
+                userId: crypt.encrypt(need.userId),
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -938,8 +938,8 @@ const getPhone = async (req, res) => {
         if (!user.phone) {
             logger.info('Usuario sin teléfono registrado', {
                 needId,
-                userId: 'ENCRYPTED',
-                requestingUserId: adminId,
+                userId: crypt.encrypt(user.id),
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -951,7 +951,7 @@ const getPhone = async (req, res) => {
         // Log de éxito
         logger.info('Teléfono obtenido exitosamente', {
             needId,
-            requestingUserId: adminId,
+            requestingUserId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress
         });
 
@@ -994,14 +994,14 @@ const updateStatus = async (req, res) => {
         logger.info('Intento de actualización de estado', {
             needId,
             newStatus: status,
-            requestingUserId: adminId,
+            requestingUserId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress
         });
 
         // Validar needId
         if (!needId) {
             logger.warn('Intento de actualización de estado sin needId', {
-                requestingUserId: adminId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(400).json({
@@ -1013,8 +1013,8 @@ const updateStatus = async (req, res) => {
         // Validar status
         if (!status) {
             logger.warn('Intento de actualización sin estado', {
-                needId,
-                requestingUserId: adminId,
+                needId: needId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(400).json({
@@ -1032,7 +1032,7 @@ const updateStatus = async (req, res) => {
             logger.warn('Intento de actualización con estado inválido', {
                 needId,
                 invalidStatus: sanitizedStatus,
-                requestingUserId: adminId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(400).json({
@@ -1048,7 +1048,7 @@ const updateStatus = async (req, res) => {
         if (!existingNeed) {
             logger.warn('Intento de actualización de estado en necesidad inexistente', {
                 needId,
-                requestingUserId: adminId,
+                requestingUserId: crypt.encrypt(adminId),
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -1072,10 +1072,10 @@ const updateStatus = async (req, res) => {
 
         // Log de éxito
         logger.info('Estado actualizado exitosamente', {
-            needId,
+            needId: needId,
             oldStatus: existingNeed.status,
             newStatus: sanitizedStatus,
-            requestingUserId: adminId,
+            requestingUserId: crypt.encrypt(adminId),
             ip: req.ip || req.connection.remoteAddress
         });
 
