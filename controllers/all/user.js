@@ -144,14 +144,14 @@ const login = async (req, res) => {
                 try {
                     await serviceEmail.sendEmailLogin(userUpdated.email, userUpdated.confirmationCode);
                     logger.info('Email de login enviado exitosamente', {
-                        userId: user._id,
+                        userId: crypt.encrypt(user._id),
                         email: '***@' + sanitizedEmail.split('@')[1],
                         ip: req.ip || req.connection.remoteAddress
                     });
                 } catch (emailError) {
                     logger.error('Error enviando email de login', {
                         error: emailError,
-                        userId: user._id,
+                        userId: crypt.encrypt(user._id),
                         email: '***@' + sanitizedEmail.split('@')[1],
                         ip: req.ip || req.connection.remoteAddress
                     });
@@ -324,7 +324,7 @@ const checkLogin = async (req, res) => {
 
         if (limitTime.getTime() >= user.dateTimeLogin.getTime()) {
             logger.warn('Verificación de login fallida - Código expirado', {
-                userId: user._id,
+                userId: crypt.encrypt(user._id),
                 email: '***@' + sanitizedData.email.split('@')[1],
                 loginTime: user.dateTimeLogin,
                 limitTime,
@@ -343,7 +343,7 @@ const checkLogin = async (req, res) => {
        
         // Log de éxito
         logger.info('Login verificado exitosamente', {
-            userId: user._id,
+            userId: crypt.encrypt(user._id),
             email: '***@' + sanitizedData.email.split('@')[1],
             ip: req.ip || req.connection.remoteAddress
         });
@@ -451,7 +451,7 @@ const activateUser = async (req, res) => {
         // Verificar si el usuario existe
         if (!updatedUser) {
             logger.warn('Usuario no encontrado para activación', {
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -462,7 +462,7 @@ const activateUser = async (req, res) => {
 
         // Log de éxito de actualización
         logger.info('Usuario y necesidades activadas exitosamente', {
-            userId: 'ENCRYPTED',
+            userId: encryptedUserId,
             email: updatedUser.email ? '***@' + updatedUser.email.split('@')[1] : 'no-email',
             needsUpdated: needsUpdateResult.modifiedCount,
             ip: req.ip || req.connection.remoteAddress
@@ -472,13 +472,13 @@ const activateUser = async (req, res) => {
         try {
             await serviceEmail.sendMailAccountActivated(updatedUser.email, updatedUser.userName);
             logger.info('Email de activación enviado', {
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 email: '***@' + updatedUser.email.split('@')[1]
             });
         } catch (emailError) {
             logger.error('Error enviando email de activación', {
                 error: emailError,
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 email: '***@' + updatedUser.email.split('@')[1]
             });
             // No devolvemos error al cliente ya que la activación fue exitosa
@@ -576,7 +576,7 @@ const deactivateUser = async (req, res) => {
         // Verificar si el usuario existe
         if (!updatedUser) {
             logger.warn('Usuario no encontrado para desactivación', {
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 ip: req.ip || req.connection.remoteAddress
             });
             return res.status(404).json({
@@ -587,7 +587,7 @@ const deactivateUser = async (req, res) => {
 
         // Log de éxito de actualización
         logger.info('Usuario y necesidades desactivadas exitosamente', {
-            userId: 'ENCRYPTED',
+            userId: encryptedUserId,
             email: updatedUser.email ? '***@' + updatedUser.email.split('@')[1] : 'no-email',
             needsUpdated: needsUpdateResult.modifiedCount,
             ip: req.ip || req.connection.remoteAddress
@@ -597,13 +597,13 @@ const deactivateUser = async (req, res) => {
         try {
             await serviceEmail.sendMailAccountDeactivated(updatedUser.email, updatedUser.userName);
             logger.info('Email de desactivación enviado', {
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 email: '***@' + updatedUser.email.split('@')[1]
             });
         } catch (emailError) {
             logger.error('Error enviando email de desactivación', {
                 error: emailError,
-                userId: 'ENCRYPTED',
+                userId: encryptedUserId,
                 email: '***@' + updatedUser.email.split('@')[1]
             });
             // No devolvemos error al cliente ya que la desactivación fue exitosa
