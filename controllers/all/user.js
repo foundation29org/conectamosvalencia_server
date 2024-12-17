@@ -19,6 +19,31 @@ const login = async (req, res) => {
             ip: req.ip || req.connection.remoteAddress
         });
 
+        // 1. Validar que exista el token del captcha
+        if (!req.body.captchaToken) {
+            logger.warn('Intento de registro sin captcha', {
+                ip: req.ip || req.connection.remoteAddress
+            });
+            return res.status(400).json({
+                success: false,
+                message: 'recaptcha failed'
+            });
+        }
+
+
+		  // 2. Verificar el captcha
+        const captchaResponse = await verifyCaptcha(req.body.captchaToken, config.secretCaptcha);
+        if (!captchaResponse || !captchaResponse.success) {
+			logger.warn('Verificación de captcha fallida', {
+				ip: req.ip || req.connection.remoteAddress,
+				score: captchaResponse && captchaResponse.score ? captchaResponse.score : null
+			});
+            return res.status(400).json({
+                success: false,
+                message: 'recaptcha failed'
+            });
+        }
+
         // Validar que existe email
         if (!req.body.email) {
             logger.warn('Intento de login sin email', {
@@ -111,7 +136,7 @@ const login = async (req, res) => {
                 }
 
                 return res.status(statusCode).json({
-                    success: false,
+                    success: true,
                     message
                 });
             }
@@ -161,9 +186,9 @@ const login = async (req, res) => {
                     });
                 }
 
-                return res.status(200).json({
+                return res.status(202).json({
                     success: true,
-                    message: 'Check email'
+                    message: 'Si existe una cuenta asociada, recibirá un correo con el enlace de inicio de sesión.'
                 });
 
             } catch (updateError) {
@@ -665,7 +690,7 @@ async function signUp(req, res) {
             });
             return res.status(400).json({
                 success: false,
-                message: 'Token de captcha no proporcionado'
+                message: 'recaptcha failed'
             });
         }
 
@@ -679,7 +704,7 @@ async function signUp(req, res) {
 			});
             return res.status(400).json({
                 success: false,
-                message: 'Verificación de captcha fallida'
+                message: 'recaptcha failed'
             });
         }
 	 
@@ -742,7 +767,7 @@ async function signUp(req, res) {
 			  });
 			  return res.status(202).json({
 				  success: true,
-				  message: 'Si existe una cuenta asociada, recibirá un correo con más instrucciones.'
+				  message: 'Login to your account if exists'
 			  });
 		  }
 
@@ -762,7 +787,7 @@ async function signUp(req, res) {
             email: '***@' + sanitizedData.email.split('@')[1],
             ip: req.ip || req.connection.remoteAddress
         });
-		return res.status(200).send({success: true, message: 'Account created' });
+		return res.status(200).send({success: true, message: 'Login to your account if exists' });
 		  
 
 	} catch (error) {
