@@ -141,7 +141,8 @@ app.use(helmet({
             "https://kit-free.fontawesome.com",
             "https://ka-f.fontawesome.com",
             "https://script.hotjar.com",
-            "https://atlas.microsoft.com" 
+            "https://atlas.microsoft.com",
+             "https://maxcdn.bootstrapcdn.com"
         ],
         frameSrc: [
             "'self'",
