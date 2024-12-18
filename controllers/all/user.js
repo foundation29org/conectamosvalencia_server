@@ -338,7 +338,7 @@ const checkLogin = async (req, res) => {
             });
             return res.status(401).json({
                 success: false,
-                message: 'Fail'
+                message: 'Token expired'
             });
         }
 
