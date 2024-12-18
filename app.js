@@ -113,7 +113,9 @@ app.use(helmet({
             "https://static.hotjar.com",
             "https://script.hotjar.com",
             "https://region1.google-analytics.com",
-            "https://maps-api-v3.googleapis.com"
+            "https://maps-api-v3.googleapis.com",
+            "https://atlas.microsoft.com", // Permitir Azure Maps
+            "https://dc.services.visualstudio.com" // Permitir Visual Studio 
         ],
         styleSrc: [
             "'self'",
@@ -149,6 +151,8 @@ app.use(helmet({
             "http://localhost:8443",
             "https://apis.google.com",
             "https://maps.googleapis.com",
+            "https://atlas.microsoft.com", // Permitir Azure Maps
+            "https://dc.services.visualstudio.com", // Permitir Visual Studio 
             "https://*.hotjar.com",
             "wss://*.hotjar.com",
             "https://*.hotjar.io",
