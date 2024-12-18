@@ -122,7 +122,8 @@ app.use(helmet({
             "'unsafe-inline'",
             "https://fonts.googleapis.com",
             "https://kit-free.fontawesome.com",
-            "https://ka-f.fontawesome.com"
+            "https://ka-f.fontawesome.com",
+             "https://maxcdn.bootstrapcdn.com"
         ],
         imgSrc: [
             "'self'",
